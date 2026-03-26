@@ -67,9 +67,11 @@ test.describe('Frontend loads correctly', () => {
     await page.goto('/')
     await page.waitForLoadState('networkidle')
 
-    // Filter out known benign errors (e.g. favicon 404)
+    // Filter out known benign errors:
+    // - favicon 404 (browser auto-request, no favicon in dev)
+    // - 401 Unauthorized from GET /auth/me — expected when no session exists on page load
     const realErrors = consoleErrors.filter(
-      (e) => !e.includes('favicon') && !e.includes('404')
+      (e) => !e.includes('favicon') && !e.includes('404') && !e.includes('401')
     )
     expect(realErrors).toHaveLength(0)
   })
