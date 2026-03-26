@@ -6,11 +6,13 @@ import {
   UpdateCommand,
   DeleteCommand,
   QueryCommand,
+  TransactWriteCommand,
   type GetCommandInput,
   type PutCommandInput,
   type UpdateCommandInput,
   type DeleteCommandInput,
   type QueryCommandInput,
+  type TransactWriteCommandInput,
 } from '@aws-sdk/lib-dynamodb'
 
 export function buildClient(): DynamoDBDocumentClient {
@@ -89,6 +91,37 @@ export async function deleteItem(
 ): Promise<void> {
   const input: DeleteCommandInput = { TableName: tableName, Key: key }
   await getDocClient().send(new DeleteCommand(input))
+}
+
+export interface TransactWriteItem {
+  Put?: {
+    TableName: string
+    Item: Record<string, unknown>
+    ConditionExpression?: string
+  }
+  Delete?: {
+    TableName: string
+    Key: Record<string, unknown>
+  }
+  Update?: {
+    TableName: string
+    Key: Record<string, unknown>
+    UpdateExpression: string
+    ConditionExpression?: string
+    ExpressionAttributeValues?: Record<string, unknown>
+    ExpressionAttributeNames?: Record<string, string>
+  }
+}
+
+/**
+ * Execute a DynamoDB TransactWrite — all-or-nothing across multiple items.
+ * Throws TransactionCanceledException on conflict or condition failure.
+ */
+export async function transactWrite(items: TransactWriteItem[]): Promise<void> {
+  const input: TransactWriteCommandInput = {
+    TransactItems: items,
+  }
+  await getDocClient().send(new TransactWriteCommand(input))
 }
 
 export async function queryItems(

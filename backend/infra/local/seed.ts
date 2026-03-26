@@ -8,10 +8,15 @@ const TABLE_NAME = () => {
 
 const ORG_ID = 'org-demo-runners'
 const USER_ID = 'user-demo-volunteer'
+const ADMIN_USER_ID = 'user-demo-admin'
 const ORG_EMAIL = 'hello@gatherly-demo.com'
 const EVENT_ID = 'event-demo-fun-run'
 const ROLE_ID_1 = 'role-marshal'
 const ROLE_ID_2 = 'role-water-station'
+
+// Pre-computed bcrypt hash (cost 12) for "TestPassword123!"
+// Generated with: bcrypt.hashSync('TestPassword123!', 12)
+const TEST_PASSWORD_HASH = '$2b$12$/vfUcNqaYnJ66Je3xw2Y9uwa.zN68SjsSioRPIo7v6OadjCpE./2q'
 
 /** Put an item idempotently — silently ignore ConditionalCheckFailedException */
 async function upsert(
@@ -65,7 +70,7 @@ export async function seedData(): Promise<void> {
     'attribute_not_exists(PK)'
   )
 
-  // 3. User item — USER# / PROFILE
+  // 3. Volunteer user item — USER# / PROFILE
   await upsert(
     tableName,
     {
@@ -75,9 +80,53 @@ export async function seedData(): Promise<void> {
       email: 'volunteer@example.com',
       firstName: 'Demo',
       lastName: 'Volunteer',
+      role: 'VOLUNTEER',
+      passwordHash: TEST_PASSWORD_HASH,
       createdAt: '2026-01-01T00:00:00.000Z',
       GSI2PK: `ORG#${ORG_ID}`,
       GSI2SK: `USER#${USER_ID}`,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 3b. Volunteer USEREMAIL sentinel — USEREMAIL# / LOCK
+  await upsert(
+    tableName,
+    {
+      PK: 'USEREMAIL#volunteer@example.com',
+      SK: 'LOCK',
+      userId: USER_ID,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 3c. Org Admin user item — USER# / PROFILE
+  await upsert(
+    tableName,
+    {
+      PK: `USER#${ADMIN_USER_ID}`,
+      SK: 'PROFILE',
+      userId: ADMIN_USER_ID,
+      email: 'admin@gatherlydemohq.com',
+      firstName: 'Demo',
+      lastName: 'Admin',
+      role: 'ORG_ADMIN',
+      orgId: ORG_ID,
+      passwordHash: TEST_PASSWORD_HASH,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      GSI2PK: `ORG#${ORG_ID}`,
+      GSI2SK: `USER#${ADMIN_USER_ID}`,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 3d. Org Admin USEREMAIL sentinel — USEREMAIL# / LOCK
+  await upsert(
+    tableName,
+    {
+      PK: 'USEREMAIL#admin@gatherlydemohq.com',
+      SK: 'LOCK',
+      userId: ADMIN_USER_ID,
     },
     'attribute_not_exists(PK)'
   )
