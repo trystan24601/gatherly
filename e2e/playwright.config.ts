@@ -17,14 +17,28 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    video: 'on',
   },
   // Export API URL for use in tests
   projects: [
     {
       name: 'chromium',
+      testIgnore: '**/*.demo.ts',
       use: {
         browserName: 'chromium',
         baseURL,
+      },
+    },
+    {
+      name: 'demo',
+      testMatch: '**/*.demo.ts',
+      use: {
+        browserName: 'chromium',
+        baseURL,
+        slowMo: 400,
+        viewport: { width: 390, height: 844 },
+        video: 'on',
+        screenshot: 'off',
       },
     },
   ],

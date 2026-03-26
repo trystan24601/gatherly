@@ -953,7 +953,19 @@ These must be resolved before or during implementation. Each has a recommended d
 
 ---
 
-## 9. The Single Most Important Lesson
+## 9. Pre-Production Blockers
+
+These items are deliberately deferred from the MVP but **must** be resolved before any public traffic is served.
+
+| ID | Item | Current state | Required before prod |
+|---|---|---|---|
+| PRE-01 | Rate limiter durability | In-memory `Map` in `backend/src/lib/rateLimiter.ts` — resets on every Lambda cold start or container restart, making it ineffective across concurrent instances | Replace with Redis (ElastiCache Serverless) counter; same MAX_ATTEMPTS/WINDOW_MS semantics |
+| PRE-02 | Rate limiting on `/auth/password-reset/request` | No rate limiting on the password-reset request endpoint | Add `rateLimiter` middleware — prevents SMTP/SQS abuse at the cost of a leaked email enumeration vector (acceptable given no-enumeration design elsewhere) |
+| PRE-03 | Session cookie `maxAge` | Cookie has no `maxAge` set — treated as a session cookie by the browser and deleted on tab close, despite a 7-day DynamoDB TTL on the server side | Set `maxAge: 7 * 24 * 60 * 60 * 1000` on the cookie options in `createSession` |
+
+---
+
+## 10. The Single Most Important Lesson
 
 **Always use `ExpressionAttributeNames` for every attribute name in every DynamoDB `UpdateExpression`, not just the ones you know are reserved words.**
 

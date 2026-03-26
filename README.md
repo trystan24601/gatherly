@@ -44,7 +44,7 @@ Services:
 | Volunteer | volunteer@example.com | `TestPassword123!` |
 | Org Admin | admin@gatherlydemohq.com | `TestPassword123!` |
 
-Seed data includes: 1 approved organisation (Gatherly Demo Runners), 1 published event with 2 roles.
+Seed data includes: 1 approved organisation (Gatherly Demo Runners), 1 published event with 2 roles, both users with hashed passwords ready for login.
 
 ## Environment Variables
 

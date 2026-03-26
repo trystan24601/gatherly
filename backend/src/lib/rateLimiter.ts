@@ -1,0 +1,61 @@
+/**
+ * In-memory IP-keyed rate limiter for failed login attempts.
+ *
+ * Tracks failed attempts only. Allows up to MAX_ATTEMPTS per IP within a
+ * WINDOW_MS sliding window. Returns true when the caller is blocked.
+ *
+ * TODO: SECURITY — not durable, must be replaced with Redis (ElastiCache) before production.
+ * This Map is process-scoped: any Lambda cold start or container restart resets all
+ * counters, making the rate limit ineffective across restarts or concurrent instances.
+ * See pre-production blockers in MVP-PLAN.md.
+ */
+
+const MAX_ATTEMPTS = 5
+const WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+
+interface Counter {
+  count: number
+  windowStart: number
+}
+
+const store = new Map<string, Counter>()
+
+/**
+ * Check whether the IP is currently rate-limited (i.e. has exceeded
+ * MAX_ATTEMPTS failed attempts within the current WINDOW_MS).
+ * Does NOT record a new attempt — call `recordFailedAttempt` for that.
+ */
+export function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const entry = store.get(ip)
+
+  if (!entry || now - entry.windowStart >= WINDOW_MS) {
+    return false
+  }
+
+  return entry.count >= MAX_ATTEMPTS
+}
+
+/**
+ * Record one failed login attempt from `ip`.
+ * Returns true immediately if the IP is now rate-limited after this attempt.
+ */
+export function recordFailedAttempt(ip: string): boolean {
+  const now = Date.now()
+  const entry = store.get(ip)
+
+  if (!entry || now - entry.windowStart >= WINDOW_MS) {
+    store.set(ip, { count: 1, windowStart: now })
+    return false
+  }
+
+  entry.count += 1
+  return entry.count >= MAX_ATTEMPTS
+}
+
+/**
+ * Reset the entire in-memory store — used in tests.
+ */
+export function resetLimiter(): void {
+  store.clear()
+}
