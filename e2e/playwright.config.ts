@@ -23,9 +23,22 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: '**/*.demo.ts',
       use: {
         browserName: 'chromium',
         baseURL,
+      },
+    },
+    {
+      name: 'demo',
+      testMatch: '**/*.demo.ts',
+      use: {
+        browserName: 'chromium',
+        baseURL,
+        slowMo: 400,
+        viewport: { width: 390, height: 844 },
+        video: 'on',
+        screenshot: 'off',
       },
     },
   ],

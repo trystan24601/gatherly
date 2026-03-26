@@ -209,3 +209,112 @@ jobs:
               issue_number: context.issue.number,
               body: `## E2E Test Videos 🎬\n\nPlaywright recorded a video for every test in this run.\n\n- 📹 [Download videos](${runUrl}) — expand **playwright-videos** artifact\n- 📊 [Download HTML report](${runUrl}) — expand **playwright-report** artifact\n\n> Videos are \`.webm\` files, playable in Chrome/Firefox or VLC.`,
             })
+
+  feature-demo:
+    name: Feature Demo Video
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start local services
+        run: docker compose up -d dynamodb-local dynamodb-admin mailhog
+
+      - name: Wait for DynamoDB Local
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:8000 > /dev/null 2>&1; then
+              echo "DynamoDB Local ready"
+              break
+            fi
+            echo "Attempt $i/30 — waiting for DynamoDB Local..."
+            sleep 2
+          done
+
+      - name: Bootstrap and seed database
+        run: |
+          npm run db:bootstrap --workspace=backend
+          npm run db:seed --workspace=backend
+        env:
+          AWS_REGION: eu-west-2
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          DYNAMODB_TABLE_NAME: gatherly-local
+          AWS_ACCESS_KEY_ID: local
+          AWS_SECRET_ACCESS_KEY: local
+
+      - name: Start API
+        run: npm run dev --workspace=backend &
+        env:
+          AWS_REGION: eu-west-2
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          DYNAMODB_TABLE_NAME: gatherly-local
+          AWS_ACCESS_KEY_ID: local
+          AWS_SECRET_ACCESS_KEY: local
+          PORT: 3001
+
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:3001/health > /dev/null 2>&1; then
+              echo "API ready"
+              break
+            fi
+            echo "Attempt $i/30 — waiting for API..."
+            sleep 2
+          done
+
+      - name: Start frontend
+        run: npm run dev --workspace=frontend &
+        env:
+          VITE_API_BASE_URL: http://localhost:3001
+
+      - name: Wait for frontend
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:5173 > /dev/null 2>&1; then
+              echo "Frontend ready"
+              break
+            fi
+            echo "Attempt $i/30 — waiting for frontend..."
+            sleep 2
+          done
+
+      - name: Run demo tests
+        run: npx playwright test --project=demo
+        working-directory: e2e
+        env:
+          E2E_BASE_URL: http://localhost:5173
+          E2E_API_URL: http://localhost:3001
+
+      - name: Upload feature demo video
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: feature-demo-video
+          path: e2e/test-results/
+          retention-days: 30
+
+      - name: Post demo video comment to PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## Feature Demo 🎬\n\n> A screen recording of this feature's happy path on mobile (390×844).\n\n📹 **[Download demo video](${runUrl})** — expand the **feature-demo-video** artifact\n\nThe video shows the complete user journey for the feature introduced in this PR, recorded at deliberate pace so every interaction is visible.`,
+            })
