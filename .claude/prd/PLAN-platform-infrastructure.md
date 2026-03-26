@@ -47,19 +47,19 @@ GSI access patterns:
 **Agent**: `infrastructure-engineer`
 
 **Tasks**:
-- [ ] INF-01: Scaffold Terraform workspace structure — `infra/terraform/` with `modules/` and `environments/staging`, `environments/prod` variable files; shared `backend.tf` pointing at S3 state bucket `gatherly-terraform-state-299311846579` + DynamoDB lock table
-- [ ] INF-02: Terraform module — DynamoDB single-table (`gatherly-<env>`), on-demand billing, PITR enabled, deletion protection on prod, encryption at rest, all 6 GSIs (ALL projection, PAY_PER_REQUEST), all entity key patterns documented in comments; `DYNAMODB_TABLE_NAME` output exported
-- [ ] INF-03: Terraform module — Lambda + API Gateway HTTP API; single catch-all Lambda function (placeholder esbuild zip); IAM execution role with least-privilege inline policies (DynamoDB, SQS, Secrets Manager, X-Ray, CloudWatch Logs); CORS configured for frontend origin env var; `API_GATEWAY_URL` output exported
-- [ ] INF-04: Terraform module — S3 bucket for file storage (private, server-side encryption, versioning on prod); S3 bucket for frontend assets (private); CloudFront distribution with OAC, HTTPS-only, custom domain `gatherlywork.com`, ACM certificate (`us-east-1` provider for ACM), Route 53 A record alias to CloudFront, `CLOUDFRONT_DISTRIBUTION_ID` output exported
-- [ ] INF-05: Terraform module — SQS standard queue + DLQ (`maxReceiveCount=3`), encryption enabled; SES domain identity for `gatherlywork.com` with Route 53 DKIM/verification records automated via Terraform; `SQS_QUEUE_URL` and `SQS_DLQ_URL` outputs exported
-- [ ] INF-06: Terraform module — WAF Web ACL attached to API Gateway; AWS managed rule group `AWSManagedRulesCommonRuleSet`; rate-based rule (configurable threshold, default 2000 req/5min); association to API Gateway stage
-- [ ] INF-07: Terraform module — observability: CloudWatch Log Groups for Lambda (30-day retention staging, 90-day prod), X-Ray tracing enabled on Lambda and API Gateway, CloudWatch dashboard (request count, p50/p95/p99 latency, error rate, DynamoDB RCU/WCU, SQS queue depth), CloudWatch Alarm (Lambda error rate > 1% over 5 min) → SNS topic → email subscription, AWS Budgets at 80% of £50/month (staging) and £200/month (prod); Lambda concurrency limit set per environment to cap runaway costs
-- [ ] INF-08: Terraform module — Secrets Manager secrets for `SESSION_SECRET` and `SES_SMTP_PASSWORD`; IAM policy grants Lambda read access to these secrets only
-- [ ] INF-09: Run `terraform validate` and `tflint` against all modules; resolve all warnings and errors; run Checkov policy scan and document any accepted findings in `infra/terraform/CHECKOV-EXCEPTIONS.md`
-- [ ] INF-10: Provide `docker-compose.yml` at project root with services: `api` (local Node build, port 3001), `frontend` (Vite dev server, port 5173), `dynamodb-local` (`amazon/dynamodb-local`, port 8000), `dynamodb-admin` (`aaronshaf/dynamodb-admin`, port 8001), `mailhog` (`mailhog/mailhog`, SMTP 1025, UI 8025); health checks on all services; `.env.local.example` with all required variables documented
-- [ ] INF-11: GitHub Actions `ci.yml` — triggers on pull request; jobs: lint+typecheck (frontend and backend in parallel), unit tests (Vitest, frontend and backend in parallel), production build (frontend Vite + backend tsc), Playwright E2E (waits for DynamoDB Local readiness with curl poll max 30 attempts, waits for API health max 30 attempts, uploads HTML report artifact on failure)
-- [ ] INF-12: GitHub Actions `deploy-staging.yml` — triggers on merge to `main`; runs all CI steps then: `terraform apply` staging, Lambda zip + `update-function-code`, frontend S3 sync + CloudFront invalidation, smoke test `GET /health` returns 200
-- [ ] INF-13: GitHub Actions `deploy-prod.yml` — manual trigger or tagged release; GitHub environment protection (manual approval gate); same deploy steps as staging
+- [x] INF-01: Scaffold Terraform workspace structure — `infra/terraform/` with `modules/` and `environments/staging`, `environments/prod` variable files; shared `backend.tf` pointing at S3 state bucket `gatherly-terraform-state-299311846579` + DynamoDB lock table
+- [x] INF-02: Terraform module — DynamoDB single-table (`gatherly-<env>`), on-demand billing, PITR enabled, deletion protection on prod, encryption at rest, all 6 GSIs (ALL projection, PAY_PER_REQUEST), all entity key patterns documented in comments; `DYNAMODB_TABLE_NAME` output exported
+- [x] INF-03: Terraform module — Lambda + API Gateway HTTP API; single catch-all Lambda function (placeholder esbuild zip); IAM execution role with least-privilege inline policies (DynamoDB, SQS, Secrets Manager, X-Ray, CloudWatch Logs); CORS configured for frontend origin env var; `API_GATEWAY_URL` output exported
+- [x] INF-04: Terraform module — S3 bucket for file storage (private, server-side encryption, versioning on prod); S3 bucket for frontend assets (private); CloudFront distribution with OAC, HTTPS-only, custom domain `gatherlywork.com`, ACM certificate (`us-east-1` provider for ACM), Route 53 A record alias to CloudFront, `CLOUDFRONT_DISTRIBUTION_ID` output exported
+- [x] INF-05: Terraform module — SQS standard queue + DLQ (`maxReceiveCount=3`), encryption enabled; SES domain identity for `gatherlywork.com` with Route 53 DKIM/verification records automated via Terraform; `SQS_QUEUE_URL` and `SQS_DLQ_URL` outputs exported
+- [x] INF-06: Terraform module — WAF Web ACL attached to API Gateway; AWS managed rule group `AWSManagedRulesCommonRuleSet`; rate-based rule (configurable threshold, default 2000 req/5min); association to API Gateway stage
+- [x] INF-07: Terraform module — observability: CloudWatch Log Groups for Lambda (30-day retention staging, 90-day prod), X-Ray tracing enabled on Lambda and API Gateway, CloudWatch dashboard (request count, p50/p95/p99 latency, error rate, DynamoDB RCU/WCU, SQS queue depth), CloudWatch Alarm (Lambda error rate > 1% over 5 min) → SNS topic → email subscription, AWS Budgets at 80% of £50/month (staging) and £200/month (prod); Lambda concurrency limit set per environment to cap runaway costs
+- [x] INF-08: Terraform module — Secrets Manager secrets for `SESSION_SECRET` and `SES_SMTP_PASSWORD`; IAM policy grants Lambda read access to these secrets only
+- [x] INF-09: Run `terraform validate` and `tflint` against all modules; resolve all warnings and errors; run Checkov policy scan and document any accepted findings in `infra/terraform/CHECKOV-EXCEPTIONS.md`
+- [x] INF-10: Provide `docker-compose.yml` at project root with services: `api` (local Node build, port 3001), `frontend` (Vite dev server, port 5173), `dynamodb-local` (`amazon/dynamodb-local`, port 8000), `dynamodb-admin` (`aaronshaf/dynamodb-admin`, port 8001), `mailhog` (`mailhog/mailhog`, SMTP 1025, UI 8025); health checks on all services; `.env.local.example` with all required variables documented
+- [x] INF-11: GitHub Actions `ci.yml` — triggers on pull request; jobs: lint+typecheck (frontend and backend in parallel), unit tests (Vitest, frontend and backend in parallel), production build (frontend Vite + backend tsc), Playwright E2E (waits for DynamoDB Local readiness with curl poll max 30 attempts, waits for API health max 30 attempts, uploads HTML report artifact on failure)
+- [x] INF-12: GitHub Actions `deploy-staging.yml` — triggers on merge to `main`; runs all CI steps then: `terraform apply` staging, Lambda zip + `update-function-code`, frontend S3 sync + CloudFront invalidation, smoke test `GET /health` returns 200
+- [x] INF-13: GitHub Actions `deploy-prod.yml` — manual trigger or tagged release; GitHub environment protection (manual approval gate); same deploy steps as staging
 
 **Outputs**:
 - `DYNAMODB_TABLE_NAME` — consumed by backend as env var
@@ -81,13 +81,13 @@ GSI access patterns:
 **Agent**: `backend-developer`
 
 **Tasks**:
-- [ ] BE-TEST-01: Scaffold the backend package — `backend/` directory, `package.json` (workspace member), TypeScript config, Vitest config, ESLint config; install `@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`, `express`, `vitest`, `@types/express`
-- [ ] BE-TEST-02: Write failing unit tests for the DynamoDB client module (`backend/src/lib/dynamodb.ts`) — tests must assert: client is constructed with `DYNAMODB_ENDPOINT` env var when set (local), uses default endpoint resolution when not set (AWS); `getItem`, `putItem`, `updateItem`, `deleteItem`, `queryItems` helpers are exported; `updateItem` helper accepts exactly 5 parameters including optional `expressionAttributeNames`
-- [ ] BE-TEST-03: Write failing unit tests for `updateItem` reserved-word handling — tests must assert that when `expressionAttributeNames` is provided as the 5th argument, it is merged into the DynamoDB `UpdateCommand` `ExpressionAttributeNames`; passing `status`, `name`, `type` as aliased keys does not throw
-- [ ] BE-TEST-04: Write failing unit tests for the `bootstrap.ts` script — tests must assert: calling `bootstrapTable` creates a table named from `DYNAMODB_TABLE_NAME` env var with composite PK (`PK` string hash key) + SK (`SK` string range key); all 6 GSIs are created with correct key names (`GSI1PK`/`GSI1SK` ... `GSI6PK`/`GSI6SK`); calling `bootstrapTable` a second time on an existing table does not throw (idempotent)
-- [ ] BE-TEST-05: Write failing unit tests for `seed.ts` — tests must assert: `seedData` creates exactly 1 Organisation item, 1 User item, 1 OrgEmail sentinel item, 1 Event item, 2 Role items in the table; calling `seedData` twice produces the same item count (idempotent via conditional put or upsert)
-- [ ] BE-TEST-06: Write failing unit tests for the `/health` handler — tests must assert: `GET /health` returns HTTP 200; response body is `{"status":"ok","timestamp":"<ISO string>"}` where `timestamp` is a valid ISO 8601 string; no authentication required
-- [ ] BE-TEST-07: Write failing unit tests for the structured logger module (`backend/src/lib/logger.ts`) — tests must assert: logger emits JSON to stdout; emitted object contains fields `requestId`, `userId`, `orgId`, `action`, `durationMs`, `statusCode`; missing optional fields are omitted not null
+- [x] BE-TEST-01: Scaffold the backend package — `backend/` directory, `package.json` (workspace member), TypeScript config, Vitest config, ESLint config; install `@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`, `express`, `vitest`, `@types/express`
+- [x] BE-TEST-02: Write failing unit tests for the DynamoDB client module (`backend/src/lib/dynamodb.ts`) — tests must assert: client is constructed with `DYNAMODB_ENDPOINT` env var when set (local), uses default endpoint resolution when not set (AWS); `getItem`, `putItem`, `updateItem`, `deleteItem`, `queryItems` helpers are exported; `updateItem` helper accepts exactly 5 parameters including optional `expressionAttributeNames`
+- [x] BE-TEST-03: Write failing unit tests for `updateItem` reserved-word handling — tests must assert that when `expressionAttributeNames` is provided as the 5th argument, it is merged into the DynamoDB `UpdateCommand` `ExpressionAttributeNames`; passing `status`, `name`, `type` as aliased keys does not throw
+- [x] BE-TEST-04: Write failing unit tests for the `bootstrap.ts` script — tests must assert: calling `bootstrapTable` creates a table named from `DYNAMODB_TABLE_NAME` env var with composite PK (`PK` string hash key) + SK (`SK` string range key); all 6 GSIs are created with correct key names (`GSI1PK`/`GSI1SK` ... `GSI6PK`/`GSI6SK`); calling `bootstrapTable` a second time on an existing table does not throw (idempotent)
+- [x] BE-TEST-05: Write failing unit tests for `seed.ts` — tests must assert: `seedData` creates exactly 1 Organisation item, 1 User item, 1 OrgEmail sentinel item, 1 Event item, 2 Role items in the table; calling `seedData` twice produces the same item count (idempotent via conditional put or upsert)
+- [x] BE-TEST-06: Write failing unit tests for the `/health` handler — tests must assert: `GET /health` returns HTTP 200; response body is `{"status":"ok","timestamp":"<ISO string>"}` where `timestamp` is a valid ISO 8601 string; no authentication required
+- [x] BE-TEST-07: Write failing unit tests for the structured logger module (`backend/src/lib/logger.ts`) — tests must assert: logger emits JSON to stdout; emitted object contains fields `requestId`, `userId`, `orgId`, `action`, `durationMs`, `statusCode`; missing optional fields are omitted not null
 
 **Outputs**: Failing Vitest test suite in `backend/src/` covering DynamoDB client, bootstrap script, seed script, health handler, and logger. All tests must fail (Red) before Layer 1b begins.
 
@@ -101,13 +101,13 @@ GSI access patterns:
 **Agent**: `backend-developer`
 
 **Tasks**:
-- [ ] BE-01: Implement `backend/src/lib/dynamodb.ts` — DynamoDB DocumentClient factory that reads `DYNAMODB_ENDPOINT` from env; export `getItem`, `putItem`, `updateItem` (5-param signature), `deleteItem`, `queryItems` helpers; ensure `updateItem` merges `expressionAttributeNames` into `ExpressionAttributeNames` on the `UpdateCommand`; pass BE-TEST-02 and BE-TEST-03
-- [ ] BE-02: Implement `backend/src/lib/logger.ts` — structured JSON logger using `console.log`; accepts context object with `requestId`, `userId`, `orgId`, `action`, `durationMs`, `statusCode`; omits undefined fields from output; pass BE-TEST-07
-- [ ] BE-03: Implement `infra/local/bootstrap.ts` — creates the DynamoDB table with PK/SK composite key and all 6 GSIs using DynamoDB Local endpoint; idempotent (catch `ResourceInUseException`); pass BE-TEST-04
-- [ ] BE-04: Implement `infra/local/seed.ts` — inserts 1 approved org (`ORG#<id>` / `PROFILE`), 1 org email sentinel (`ORGEMAIL#<email>` / `LOCK`), 1 volunteer user (`USER#<id>` / `PROFILE`), 1 published event (`EVENT#<id>` / `PROFILE`), 2 roles (`EVENT#<id>` / `ROLE#<id>`); uses conditional put (`attribute_not_exists(PK)`) for idempotency; pass BE-TEST-05
-- [ ] BE-05: Implement `backend/src/handlers/health.ts` Express handler and wire it into `backend/src/app.ts` — `GET /health` returns `{"status":"ok","timestamp":"<ISO>"}` with HTTP 200; pass BE-TEST-06
-- [ ] BE-06: Add `package.json` scripts: `db:bootstrap` (runs `infra/local/bootstrap.ts` via `ts-node`), `db:seed` (runs `infra/local/seed.ts`), `dev` (starts Express on port 3001 with nodemon), `build` (tsc compile), `test` (vitest run), `lint` (eslint), `typecheck` (tsc --noEmit)
-- [ ] BE-07: Refactor pass — remove any duplication introduced during Green phase; ensure no hardcoded table names, endpoint URLs, or credentials; re-run `npx vitest run` to confirm all tests remain green; run `npm run lint` and `npm run typecheck` with zero errors
+- [x] BE-01: Implement `backend/src/lib/dynamodb.ts` — DynamoDB DocumentClient factory that reads `DYNAMODB_ENDPOINT` from env; export `getItem`, `putItem`, `updateItem` (5-param signature), `deleteItem`, `queryItems` helpers; ensure `updateItem` merges `expressionAttributeNames` into `ExpressionAttributeNames` on the `UpdateCommand`; pass BE-TEST-02 and BE-TEST-03
+- [x] BE-02: Implement `backend/src/lib/logger.ts` — structured JSON logger using `console.log`; accepts context object with `requestId`, `userId`, `orgId`, `action`, `durationMs`, `statusCode`; omits undefined fields from output; pass BE-TEST-07
+- [x] BE-03: Implement `infra/local/bootstrap.ts` — creates the DynamoDB table with PK/SK composite key and all 6 GSIs using DynamoDB Local endpoint; idempotent (catch `ResourceInUseException`); pass BE-TEST-04
+- [x] BE-04: Implement `infra/local/seed.ts` — inserts 1 approved org (`ORG#<id>` / `PROFILE`), 1 org email sentinel (`ORGEMAIL#<email>` / `LOCK`), 1 volunteer user (`USER#<id>` / `PROFILE`), 1 published event (`EVENT#<id>` / `PROFILE`), 2 roles (`EVENT#<id>` / `ROLE#<id>`); uses conditional put (`attribute_not_exists(PK)`) for idempotency; pass BE-TEST-05
+- [x] BE-05: Implement `backend/src/handlers/health.ts` Express handler and wire it into `backend/src/app.ts` — `GET /health` returns `{"status":"ok","timestamp":"<ISO>"}` with HTTP 200; pass BE-TEST-06
+- [x] BE-06: Add `package.json` scripts: `db:bootstrap` (runs `infra/local/bootstrap.ts` via `ts-node`), `db:seed` (runs `infra/local/seed.ts`), `dev` (starts Express on port 3001 with nodemon), `build` (tsc compile), `test` (vitest run), `lint` (eslint), `typecheck` (tsc --noEmit)
+- [x] BE-07: Refactor pass — remove any duplication introduced during Green phase; ensure no hardcoded table names, endpoint URLs, or credentials; re-run `npx vitest run` to confirm all tests remain green; run `npm run lint` and `npm run typecheck` with zero errors
 
 **Outputs**:
 - `backend/src/lib/dynamodb.ts` — DynamoDB client and helper utilities
@@ -129,9 +129,9 @@ GSI access patterns:
 **Agent**: `frontend-developer`
 
 **Tasks**:
-- [ ] FE-TEST-01: Scaffold the frontend package — `frontend/` directory, `package.json` (workspace member), Vite config, TypeScript config, Vitest config with `@testing-library/react`, Tailwind CSS (reuse existing `tailwind.config.js` at repo root), ESLint config
-- [ ] FE-TEST-02: Write failing unit tests for a `HealthBanner` component (or equivalent app shell) — tests must assert: component renders without crashing; renders expected heading text (e.g., "Gatherly"); component does not display an error state on initial mount
-- [ ] FE-TEST-03: Write failing unit tests for a `apiClient` utility (`frontend/src/lib/api.ts`) — tests must assert: `apiClient` reads base URL from `VITE_API_BASE_URL` env var; `apiClient.get('/health')` makes a fetch to `<VITE_API_BASE_URL>/health`; on non-2xx response, rejects with an error containing the status code
+- [x] FE-TEST-01: Scaffold the frontend package — `frontend/` directory, `package.json` (workspace member), Vite config, TypeScript config, Vitest config with `@testing-library/react`, Tailwind CSS (reuse existing `tailwind.config.js` at repo root), ESLint config
+- [x] FE-TEST-02: Write failing unit tests for a `HealthBanner` component (or equivalent app shell) — tests must assert: component renders without crashing; renders expected heading text (e.g., "Gatherly"); component does not display an error state on initial mount
+- [x] FE-TEST-03: Write failing unit tests for a `apiClient` utility (`frontend/src/lib/api.ts`) — tests must assert: `apiClient` reads base URL from `VITE_API_BASE_URL` env var; `apiClient.get('/health')` makes a fetch to `<VITE_API_BASE_URL>/health`; on non-2xx response, rejects with an error containing the status code
 
 **Outputs**: Failing Vitest component test suite in `frontend/src/`. All tests must fail (Red) before Layer 2b begins.
 
@@ -145,10 +145,10 @@ GSI access patterns:
 **Agent**: `frontend-developer`
 
 **Tasks**:
-- [ ] FE-01: Implement React + Vite app scaffold — `frontend/src/main.tsx`, `frontend/src/App.tsx` with basic routing shell (React Router v6); Tailwind CSS wired via PostCSS; pass FE-TEST-02
-- [ ] FE-02: Implement `frontend/src/lib/api.ts` — thin fetch wrapper that reads `VITE_API_BASE_URL` from `import.meta.env`; exports typed `get`, `post`, `put`, `delete` helpers; rejects on non-2xx; pass FE-TEST-03
-- [ ] FE-03: Add `package.json` scripts: `dev` (Vite dev server on port 5173), `build` (Vite production build), `preview`, `test` (vitest run), `lint` (eslint), `typecheck` (tsc --noEmit)
-- [ ] FE-04: Refactor pass — ensure no hardcoded API URLs; verify `VITE_API_BASE_URL` is the only env var reference for the API origin; re-run `npx vitest run` with all tests green; run `npm run lint` and `npm run typecheck` with zero errors
+- [x] FE-01: Implement React + Vite app scaffold — `frontend/src/main.tsx`, `frontend/src/App.tsx` with basic routing shell (React Router v6); Tailwind CSS wired via PostCSS; pass FE-TEST-02
+- [x] FE-02: Implement `frontend/src/lib/api.ts` — thin fetch wrapper that reads `VITE_API_BASE_URL` from `import.meta.env`; exports typed `get`, `post`, `put`, `delete` helpers; rejects on non-2xx; pass FE-TEST-03
+- [x] FE-03: Add `package.json` scripts: `dev` (Vite dev server on port 5173), `build` (Vite production build), `preview`, `test` (vitest run), `lint` (eslint), `typecheck` (tsc --noEmit)
+- [x] FE-04: Refactor pass — ensure no hardcoded API URLs; verify `VITE_API_BASE_URL` is the only env var reference for the API origin; re-run `npx vitest run` with all tests green; run `npm run lint` and `npm run typecheck` with zero errors
 
 **Outputs**:
 - `frontend/src/main.tsx`, `frontend/src/App.tsx` — React application entry point
@@ -167,13 +167,13 @@ GSI access patterns:
 **Agent**: `playwright-tester`
 
 **Tasks**:
-- [ ] TST-01: Scaffold Playwright — `e2e/` directory, `playwright.config.ts`, `package.json`; configure base URL from `E2E_BASE_URL` env var (default `http://localhost:5173`); configure API base URL from `E2E_API_URL` env var (default `http://localhost:3001`)
-- [ ] TST-02: E2E test — local stack smoke test: `docker compose up -d` is assumed running; assert `http://localhost:5173` responds with HTTP 200 and page title contains "Gatherly"; assert `http://localhost:8001` (DynamoDB Admin) responds with HTTP 200; assert `http://localhost:8025` (Mailhog) responds with HTTP 200
-- [ ] TST-03: API contract test — `GET http://localhost:3001/health` returns status 200; response body JSON contains `status: "ok"` and `timestamp` that is a valid ISO 8601 string
-- [ ] TST-04: E2E test — frontend loads and renders: navigate to `http://localhost:5173`; assert page loads without JavaScript console errors; assert no visible error state is present; assert page contains the application heading
-- [ ] TST-05: Database bootstrap acceptance test — after running `npm run db:bootstrap`, query DynamoDB Local via the Admin UI or AWS CLI; assert table `gatherly-local` exists; assert all 6 GSIs are present (`GSI1` through `GSI6`)
-- [ ] TST-06: Seed data acceptance test — after running `npm run db:seed` twice (to verify idempotency), assert exactly 1 Organisation item, 1 User item, 1 OrgEmail sentinel, 1 Event item, 2 Role items exist in the table (no duplicates); assert org has `status: "APPROVED"`, event has `status: "PUBLISHED"`
-- [ ] TST-07: CI configuration — ensure Playwright is wired into the `ci.yml` workflow correctly; verify HTML report artifact upload on failure (`if: always()`); verify DynamoDB Local and API readiness poll steps precede the Playwright run step
+- [x] TST-01: Scaffold Playwright — `e2e/` directory, `playwright.config.ts`, `package.json`; configure base URL from `E2E_BASE_URL` env var (default `http://localhost:5173`); configure API base URL from `E2E_API_URL` env var (default `http://localhost:3001`)
+- [x] TST-02: E2E test — local stack smoke test: `docker compose up -d` is assumed running; assert `http://localhost:5173` responds with HTTP 200 and page title contains "Gatherly"; assert `http://localhost:8001` (DynamoDB Admin) responds with HTTP 200; assert `http://localhost:8025` (Mailhog) responds with HTTP 200
+- [x] TST-03: API contract test — `GET http://localhost:3001/health` returns status 200; response body JSON contains `status: "ok"` and `timestamp` that is a valid ISO 8601 string
+- [x] TST-04: E2E test — frontend loads and renders: navigate to `http://localhost:5173`; assert page loads without JavaScript console errors; assert no visible error state is present; assert page contains the application heading
+- [x] TST-05: Database bootstrap acceptance test — after running `npm run db:bootstrap`, query DynamoDB Local via the Admin UI or AWS CLI; assert table `gatherly-local` exists; assert all 6 GSIs are present (`GSI1` through `GSI6`)
+- [x] TST-06: Seed data acceptance test — after running `npm run db:seed` twice (to verify idempotency), assert exactly 1 Organisation item, 1 User item, 1 OrgEmail sentinel, 1 Event item, 2 Role items exist in the table (no duplicates); assert org has `status: "APPROVED"`, event has `status: "PUBLISHED"`
+- [x] TST-07: CI configuration — ensure Playwright is wired into the `ci.yml` workflow correctly; verify HTML report artifact upload on failure (`if: always()`); verify DynamoDB Local and API readiness poll steps precede the Playwright run step
 
 **Outputs**: Playwright E2E test suite in `e2e/`; all tests passing against local stack; CI workflow validated
 

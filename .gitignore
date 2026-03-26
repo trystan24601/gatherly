@@ -1,0 +1,38 @@
+# Environment
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Build outputs
+dist/
+backend/dist/
+frontend/dist/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+.terraform.lock.hcl
+terraform.tfvars
+infra/terraform/modules/lambda/lambda_placeholder.zip
+
+# Test outputs
+e2e/test-results/
+e2e/playwright-report/
+coverage/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
