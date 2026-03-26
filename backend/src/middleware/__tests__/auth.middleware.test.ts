@@ -53,7 +53,7 @@ describe('requireAuth middleware', () => {
   })
 
   it('returns 401 when session is not found in DynamoDB', async () => {
-    ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
     const { req, res, next } = makeMocks({ cookies: { sid: 'nonexistent-session' } })
 
     await requireAuth(req, res, next)
