@@ -1,5 +1,7 @@
 # PRD: Event Roles
 
+> 🔗 GitHub Issue: [#5 Event Roles](https://github.com/trystan24601/gatherly/issues/5)
+
 ## 1. Background
 
 Events without roles cannot accept volunteer registrations — roles are the atomic unit that volunteers sign up for. Each role has a name, optional description, headcount (capacity), and a shift window (start/end time). Roles are stored as items in the same DynamoDB partition as the event (`PK=EVENT#<eventId>`), enabling efficient retrieval of an event and all its roles in a single query. Role management (add, edit, delete) is only permitted on DRAFT events.

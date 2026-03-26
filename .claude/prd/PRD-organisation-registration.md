@@ -1,5 +1,7 @@
 # PRD: Organisation Registration
 
+> 🔗 GitHub Issue: [#3 Organisation Registration](https://github.com/trystan24601/gatherly/issues/3)
+
 ## 1. Background
 
 Organisations are the supply side of the platform. Without at least one approved organisation, there are no events and no volunteers to serve. This feature covers the full journey from an anonymous user submitting an organisation registration form through to a Super Admin approving or rejecting it, and the Org Admin receiving an email notification and being able to log in. The registration is atomic — partial writes are impossible using DynamoDB TransactWrite. Email uniqueness is enforced at both the org contact email and the admin email level via sentinel items.

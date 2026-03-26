@@ -1,5 +1,7 @@
 # PRD: Volunteer Profile & Skills
 
+> 🔗 GitHub Issue: [#9 Volunteer Profile & Skills](https://github.com/trystan24601/gatherly/issues/9)
+
 ## 1. Background
 
 Without a profile, volunteers are anonymous and organisations cannot properly vet or match them to roles. The profile feature gives volunteers a way to describe themselves, set their availability preferences, and list their skills. The profile completeness score is computed client-side from 8 optional fields and never persisted to DynamoDB. The skills catalogue is managed by Super Admins and provides a controlled vocabulary for matching volunteers to role skill requirements.

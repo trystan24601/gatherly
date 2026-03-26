@@ -1,5 +1,7 @@
 # PRD: Event Creation & Organisation Dashboard
 
+> 🔗 GitHub Issue: [#4 Event Creation & Organisation Dashboard](https://github.com/trystan24601/gatherly/issues/4)
+
 ## 1. Background
 
 An approved organisation needs to create events in order to attract volunteers. This feature covers the event creation form, editing of draft events, and the organisation dashboard that shows all events with their fill rates. Events start in DRAFT status and are invisible to volunteers until published (covered in the Event Lifecycle PRD). The `orgId` is always taken from the authenticated session — never from the request body — to prevent an org admin from creating events on behalf of another org.

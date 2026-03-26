@@ -1,5 +1,7 @@
 # PRD: Authentication
 
+> 🔗 GitHub Issue: [#2 Authentication](https://github.com/trystan24601/gatherly/issues/2)
+
 ## 1. Background
 
 Authentication is the second layer of the platform — nothing meaningful works without it. All three user types (Volunteer, Org Admin, Super Admin) need their own login paths. Sessions are stored in DynamoDB with TTLs. The platform uses cookie-based sessions (`httpOnly`, `Secure`, `SameSite=Strict`) rather than JWTs, so tokens are revocable and never leak in browser history. Password hashing uses bcrypt (12 rounds). Super Admins are provisioned only via CLI — there is no UI path to become a Super Admin.

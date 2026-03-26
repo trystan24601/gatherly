@@ -1,5 +1,7 @@
 # PRD: Event Lifecycle
 
+> 🔗 GitHub Issue: [#6 Event Lifecycle](https://github.com/trystan24601/gatherly/issues/6)
+
 ## 1. Background
 
 A DRAFT event is invisible to volunteers. The publish action is what makes an event real — it moves the event from DRAFT to PUBLISHED, making it visible in the volunteer discovery feed. Cancellation is the inverse: it removes an event from discovery and notifies all registered volunteers. An event can only move forward through the lifecycle (DRAFT → PUBLISHED → COMPLETED or CANCELLED); no backwards transitions are permitted.

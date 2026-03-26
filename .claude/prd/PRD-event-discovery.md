@@ -1,5 +1,7 @@
 # PRD: Event Discovery
 
+> 🔗 GitHub Issue: [#7 Event Discovery](https://github.com/trystan24601/gatherly/issues/7)
+
 ## 1. Background
 
 Volunteers need a way to find events to sign up for. The discovery feed is the demand-side entry point — it shows all PUBLISHED events sorted by date ascending, with filtering by event type, city, and date range. The feed uses cursor-based pagination (20 per page) and is accessible only to VOLUNTEER sessions. Org Admins are blocked from the discovery feed to prevent orgs from browsing each other's events. The UI uses skeleton loaders for initial load and a "Load more" button for pagination.

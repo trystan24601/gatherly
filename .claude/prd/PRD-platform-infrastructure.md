@@ -1,5 +1,7 @@
 # PRD: Platform Infrastructure
 
+> 🔗 GitHub Issue: [#1 Platform Infrastructure](https://github.com/trystan24601/gatherly/issues/1)
+
 ## 1. Background
 
 Before any product features can be built, the platform requires a foundational infrastructure layer. This covers the AWS cloud infrastructure (Terraform), a local development environment (Docker Compose), a CI/CD pipeline (GitHub Actions), observability tooling, and the DynamoDB single-table schema design with all 6 GSIs. All subsequent features depend on this foundation. The stack: Node.js 20 + TypeScript backend (Express locally, Lambda in prod), React + Vite + Tailwind frontend served via CloudFront/S3, DynamoDB on-demand single-table. All AWS resources in `eu-west-2` (London).

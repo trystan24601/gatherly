@@ -1,5 +1,7 @@
 # PRD: Volunteer Registration
 
+> 🔗 GitHub Issue: [#8 Volunteer Registration](https://github.com/trystan24601/gatherly/issues/8)
+
 ## 1. Background
 
 Volunteer registration is the core transaction of the platform. A volunteer selects a role on a PUBLISHED event and submits a registration request. The system runs a sequence of pre-flight checks (event exists, role exists, no duplicate, no overlapping shift, capacity not exceeded) in a fixed order. Registrations start as PENDING and can be confirmed or declined by the Org Admin. Volunteers can cancel their own registrations. The check order is critical and must never deviate — especially overlap before capacity, which is a lesson from the events-dog build.
