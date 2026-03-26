@@ -1,0 +1,158 @@
+name: Deploy — Staging
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  ENVIRONMENT: staging
+  TF_VAR_FILE: environments/staging/terraform.tfvars
+
+jobs:
+  ci:
+    name: CI Gate
+    uses: ./.github/workflows/ci.yml
+
+  terraform:
+    name: Terraform Apply — Staging
+    runs-on: ubuntu-latest
+    needs: [ci]
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.6"
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve -var-file=${{ env.TF_VAR_FILE }}
+
+  deploy-backend:
+    name: Deploy Lambda — Staging
+    runs-on: ubuntu-latest
+    needs: [terraform]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bundle Lambda with esbuild
+        run: |
+          npm install -g esbuild
+          mkdir -p dist
+          esbuild backend/src/index.ts \
+            --bundle \
+            --platform=node \
+            --target=node20 \
+            --outfile=dist/index.js \
+            --minify
+          cd dist && zip -r lambda.zip index.js
+
+      - name: Update Lambda function code
+        run: |
+          aws lambda update-function-code \
+            --function-name gatherly-api-staging \
+            --zip-file fileb://dist/lambda.zip \
+            --region ${{ env.AWS_REGION }}
+
+  deploy-frontend:
+    name: Deploy Frontend — Staging
+    runs-on: ubuntu-latest
+    needs: [terraform]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build --workspace=frontend
+        env:
+          VITE_API_BASE_URL: ${{ secrets.STAGING_API_URL }}
+
+      - name: Sync to S3
+        run: |
+          BUCKET=$(aws cloudformation describe-stack-resources \
+            --stack-name gatherly-staging 2>/dev/null | \
+            jq -r '.StackResources[] | select(.ResourceType=="AWS::S3::Bucket") | .PhysicalResourceId' | head -1 || \
+            echo "gatherly-frontend-staging-${{ secrets.AWS_ACCOUNT_ID }}")
+          aws s3 sync frontend/dist/ s3://${BUCKET}/ \
+            --delete \
+            --cache-control "public,max-age=31536000,immutable" \
+            --exclude "index.html"
+          aws s3 cp frontend/dist/index.html s3://${BUCKET}/index.html \
+            --cache-control "no-cache,no-store,must-revalidate"
+
+      - name: Invalidate CloudFront
+        run: |
+          DIST_ID=$(terraform -chdir=infra/terraform output -raw cloudfront_distribution_id 2>/dev/null || \
+            aws cloudfront list-distributions --query \
+              "DistributionList.Items[?contains(Aliases.Items,'staging.gatherlywork.com')].Id" \
+              --output text)
+          aws cloudfront create-invalidation \
+            --distribution-id ${DIST_ID} \
+            --paths "/*"
+
+  smoke-test:
+    name: Smoke Test — Staging
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    steps:
+      - name: Health check
+        run: |
+          for i in $(seq 1 10); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.STAGING_API_URL }}/health")
+            if [ "$STATUS" = "200" ]; then
+              echo "Staging API healthy (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i/10 — HTTP $STATUS, retrying..."
+            sleep 5
+          done
+          echo "Smoke test failed"
+          exit 1
