@@ -87,32 +87,94 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
         Resource = "arn:aws:dynamodb:eu-west-2:${data.aws_caller_identity.current.account_id}:table/gatherly-terraform-locks"
       },
       {
-        Sid      = "TerraformPlanApply"
-        Effect   = "Allow"
-        Action   = [
-          "apigateway:*",
-          "cloudfront:*",
-          "cloudwatch:*",
-          "dynamodb:*",
+        Sid    = "TerraformDynamoDB"
+        Effect = "Allow"
+        Action = ["dynamodb:*"]
+        Resource = [
+          "arn:aws:dynamodb:eu-west-2:${data.aws_caller_identity.current.account_id}:table/gatherly-*",
+        ]
+      },
+      {
+        Sid    = "TerraformIAM"
+        Effect = "Allow"
+        Action = [
           "iam:GetRole", "iam:CreateRole", "iam:DeleteRole", "iam:AttachRolePolicy",
           "iam:DetachRolePolicy", "iam:PutRolePolicy", "iam:DeleteRolePolicy",
           "iam:GetRolePolicy", "iam:ListRolePolicies", "iam:ListAttachedRolePolicies",
-          "iam:PassRole", "iam:CreatePolicy", "iam:DeletePolicy",
+          "iam:CreatePolicy", "iam:DeletePolicy",
           "iam:GetPolicy", "iam:GetPolicyVersion", "iam:ListPolicyVersions",
           "iam:CreatePolicyVersion", "iam:DeletePolicyVersion",
           "iam:CreateOpenIDConnectProvider", "iam:GetOpenIDConnectProvider",
-          "lambda:*",
-          "logs:*",
+          "iam:TagRole", "iam:UntagRole", "iam:ListRoleTags",
+        ]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/gatherly-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/gatherly-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com",
+        ]
+      },
+      {
+        # iam:PassRole must be scoped — only allow passing gatherly roles to gatherly services
+        Sid    = "TerraformIAMPassRole"
+        Effect = "Allow"
+        Action = ["iam:PassRole"]
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/gatherly-*"
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = [
+              "lambda.amazonaws.com",
+              "apigateway.amazonaws.com",
+            ]
+          }
+        }
+      },
+      {
+        Sid    = "TerraformSecrets"
+        Effect = "Allow"
+        Action = ["secretsmanager:*"]
+        Resource = "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:gatherly/*"
+      },
+      {
+        Sid    = "TerraformSQS"
+        Effect = "Allow"
+        Action = ["sqs:*"]
+        Resource = "arn:aws:sqs:eu-west-2:${data.aws_caller_identity.current.account_id}:gatherly-*"
+      },
+      {
+        Sid    = "TerraformSNS"
+        Effect = "Allow"
+        Action = ["sns:*"]
+        Resource = "arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:gatherly-*"
+      },
+      {
+        Sid    = "TerraformLogs"
+        Effect = "Allow"
+        Action = ["logs:*"]
+        Resource = "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/gatherly-*"
+      },
+      {
+        Sid    = "TerraformCloudWatch"
+        Effect = "Allow"
+        Action = ["cloudwatch:*"]
+        Resource = [
+          "arn:aws:cloudwatch::${data.aws_caller_identity.current.account_id}:dashboard/gatherly-*",
+          "arn:aws:cloudwatch:eu-west-2:${data.aws_caller_identity.current.account_id}:alarm:gatherly-*",
+        ]
+      },
+      {
+        # These AWS services only support Resource: * — scoped by naming convention and OIDC subject
+        Sid    = "TerraformGlobalScope"
+        Effect = "Allow"
+        Action = [
+          "apigateway:*",
+          "cloudfront:*",
           "route53:*",
-          "s3:*",
-          "secretsmanager:*",
           "ses:*",
-          "sns:*",
-          "sqs:*",
           "wafv2:*",
-          "xray:*",
-          "budgets:*",
+          "xray:PutTraceSegments", "xray:PutTelemetryRecords", "xray:GetSamplingRules",
+          "xray:GetSamplingTargets", "xray:GetSamplingStatisticSummaries",
           "acm:*",
+          "budgets:*",
         ]
         Resource = "*"
       }

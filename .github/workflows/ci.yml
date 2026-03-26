@@ -9,6 +9,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Terraform init (no backend)
+        run: terraform init -backend=false
+        working-directory: infra/terraform
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: infra/terraform
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+        working-directory: infra/terraform
+
   lint-and-typecheck:
     name: Lint & Typecheck (${{ matrix.workspace }})
     runs-on: ubuntu-latest
@@ -157,8 +179,8 @@ jobs:
       - name: Run Playwright tests
         run: npm test --workspace=e2e
         env:
-          BASE_URL: http://localhost:5173
-          API_URL: http://localhost:3001
+          E2E_BASE_URL: http://localhost:5173
+          E2E_API_URL: http://localhost:3001
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
