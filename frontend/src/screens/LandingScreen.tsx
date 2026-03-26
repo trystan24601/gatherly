@@ -28,7 +28,7 @@ export function LandingScreen() {
           onClick={() => navigate('/events')}
           className="w-full h-[52px] rounded-md bg-accent text-white font-body text-[14px] font-semibold hover:bg-[#E55A28] active:bg-[#CC4F22] active:scale-[0.98] transition-all duration-150 mb-4"
         >
-          Get started — it's free →
+          Get started — it&apos;s free →
         </button>
 
         <p className="text-center text-body-sm text-text-secondary">
@@ -59,7 +59,7 @@ export function LandingScreen() {
             Stop coordinating volunteers in spreadsheets.
           </h2>
           <p className="text-body-sm text-text-secondary leading-relaxed mb-4">
-            Create your event, define roles, and let Occasion HQ fill them. See who's confirmed in real time.
+            Create your event, define roles, and let Occasion HQ fill them. See who&apos;s confirmed in real time.
           </p>
           <button
             type="button"

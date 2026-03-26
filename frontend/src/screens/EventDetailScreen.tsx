@@ -211,7 +211,7 @@ export function EventDetailScreen() {
                 <h2 className="font-display font-bold text-[20px] text-text-primary mb-3">
                   Application submitted
                 </h2>
-                <p className="text-body-sm text-text-secondary mb-1">You're in the queue for:</p>
+                <p className="text-body-sm text-text-secondary mb-1">You&apos;re in the queue for:</p>
                 <p className="text-[15px] font-semibold text-text-primary mb-4">{sheet.roleName}</p>
                 <p className="text-body-sm text-text-secondary leading-relaxed mb-6">
                   Your application is with {event.org} for review. They typically respond within 24 hours.
@@ -239,7 +239,7 @@ export function EventDetailScreen() {
                   {event.date} · {event.roles.find(r => r.id === sheet.roleId)?.shift}
                 </p>
                 <p className="text-body-sm text-text-secondary leading-relaxed mb-6">
-                  By applying you confirm you're available for this shift. The organiser will review and confirm your place.
+                  By applying you confirm you&apos;re available for this shift. The organiser will review and confirm your place.
                 </p>
                 <button
                   type="button"

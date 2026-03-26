@@ -56,7 +56,7 @@ export function VolunteerDashboardScreen() {
               </svg>
             </div>
             <h2 className="font-display font-semibold text-[18px] text-text-primary mb-2">
-              You haven't signed up for anything yet
+              You haven&apos;t signed up for anything yet
             </h2>
             <p className="text-[15px] text-text-secondary max-w-[260px] mx-auto mb-6">
               Find an event near you and apply for a volunteer role to get started.
@@ -91,7 +91,7 @@ export function VolunteerDashboardScreen() {
                             <p className="text-label-sm text-text-secondary mb-3">{reg.location as string}</p>
                           )}
                           <p className="text-body-sm text-text-primary mt-3 mb-3">
-                            You're confirmed for this role. See you on the day.
+                            You&apos;re confirmed for this role. See you on the day.
                           </p>
                           <div className="flex items-center gap-4">
                             <button type="button" className="text-label-sm text-accent hover:underline">
