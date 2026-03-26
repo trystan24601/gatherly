@@ -10,8 +10,8 @@ resource "aws_sqs_queue" "dlq" {
 }
 
 resource "aws_sqs_queue" "main" {
-  name                      = "gatherly-events-${var.environment}"
-  sqs_managed_sse_enabled   = true
+  name                       = "gatherly-events-${var.environment}"
+  sqs_managed_sse_enabled    = true
   visibility_timeout_seconds = 30
 
   redrive_policy = jsonencode({

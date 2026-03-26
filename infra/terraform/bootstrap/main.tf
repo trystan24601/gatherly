@@ -55,8 +55,8 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
         Resource = "arn:aws:lambda:eu-west-2:${data.aws_caller_identity.current.account_id}:function:gatherly-api-*"
       },
       {
-        Effect   = "Allow"
-        Action   = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
         Resource = [
           "arn:aws:s3:::gatherly-frontend-*",
           "arn:aws:s3:::gatherly-frontend-*/*",
@@ -68,8 +68,8 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
         Resource = "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/*"
       },
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "s3:GetObject", "s3:PutObject", "s3:ListBucket",
           "s3:GetBucketVersioning",
         ]
@@ -79,8 +79,8 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
         ]
       },
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "dynamodb:GetItem", "dynamodb:PutItem",
           "dynamodb:DeleteItem", "dynamodb:DescribeTable",
         ]
@@ -115,9 +115,9 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
       },
       {
         # iam:PassRole must be scoped — only allow passing gatherly roles to gatherly services
-        Sid    = "TerraformIAMPassRole"
-        Effect = "Allow"
-        Action = ["iam:PassRole"]
+        Sid      = "TerraformIAMPassRole"
+        Effect   = "Allow"
+        Action   = ["iam:PassRole"]
         Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/gatherly-*"
         Condition = {
           StringEquals = {
@@ -129,27 +129,27 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
         }
       },
       {
-        Sid    = "TerraformSecrets"
-        Effect = "Allow"
-        Action = ["secretsmanager:*"]
+        Sid      = "TerraformSecrets"
+        Effect   = "Allow"
+        Action   = ["secretsmanager:*"]
         Resource = "arn:aws:secretsmanager:eu-west-2:${data.aws_caller_identity.current.account_id}:secret:gatherly/*"
       },
       {
-        Sid    = "TerraformSQS"
-        Effect = "Allow"
-        Action = ["sqs:*"]
+        Sid      = "TerraformSQS"
+        Effect   = "Allow"
+        Action   = ["sqs:*"]
         Resource = "arn:aws:sqs:eu-west-2:${data.aws_caller_identity.current.account_id}:gatherly-*"
       },
       {
-        Sid    = "TerraformSNS"
-        Effect = "Allow"
-        Action = ["sns:*"]
+        Sid      = "TerraformSNS"
+        Effect   = "Allow"
+        Action   = ["sns:*"]
         Resource = "arn:aws:sns:eu-west-2:${data.aws_caller_identity.current.account_id}:gatherly-*"
       },
       {
-        Sid    = "TerraformLogs"
-        Effect = "Allow"
-        Action = ["logs:*"]
+        Sid      = "TerraformLogs"
+        Effect   = "Allow"
+        Action   = ["logs:*"]
         Resource = "arn:aws:logs:eu-west-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/gatherly-*"
       },
       {

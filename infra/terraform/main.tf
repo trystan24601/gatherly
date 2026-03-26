@@ -86,13 +86,13 @@ module "secrets" {
 module "lambda" {
   source = "./modules/lambda"
 
-  environment                  = var.environment
-  table_arn                    = module.dynamodb.table_arn
-  sqs_queue_arn                = module.messaging.sqs_queue_arn
-  secret_arns                  = [module.secrets.session_secret_arn, module.secrets.ses_smtp_password_arn]
-  frontend_origin              = local.frontend_origin
+  environment                    = var.environment
+  table_arn                      = module.dynamodb.table_arn
+  sqs_queue_arn                  = module.messaging.sqs_queue_arn
+  secret_arns                    = [module.secrets.session_secret_arn, module.secrets.ses_smtp_password_arn]
+  frontend_origin                = local.frontend_origin
   reserved_concurrent_executions = var.lambda_reserved_concurrency
-  tags                         = local.common_tags
+  tags                           = local.common_tags
 }
 
 module "waf" {
