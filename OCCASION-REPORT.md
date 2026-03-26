@@ -498,3 +498,274 @@ Cancelled events: return `410 Gone`, remove from sitemap. Do not use `404`.
 ---
 
 *Generated 2026-03-26. Platform working name: Gatherly / Occasion HQ. Domain under consideration: occasionhq.com.*
+
+---
+
+## Community & Sponsor Strategy
+
+*Analysis produced 2026-03-26. Two connected ideas evaluated: Idea A — sponsor vouchers for high-scoring volunteers; Idea B — annual regional community events organised by Occasion HQ itself.*
+
+---
+
+### Idea A: Sponsor Vouchers for High-Scoring Volunteers
+
+#### The Case For
+
+The core insight here is accurate and underexploited. Volunteers at running and sports events are a self-selecting group of active, engaged, brand-responsive people. They are not scrolling a banner ad — they gave up a Saturday morning to stand in the rain directing runners. A brand that reaches them at that moment of commitment is reaching them at peak identity alignment: this is who they are, and a brand that recognises it earns disproportionate goodwill.
+
+The comparable in the market is Vitality's integration with parkrun: Vitality rewards volunteers with 5 points per volunteering session, which feed into premium discounts and partner benefits. It is effective precisely because the value exchange feels earned rather than promotional. Brooks Running became parkrun's exclusive global footwear partner in 2023 and extended through 2028 — a five-year commitment to a volunteer-community channel. These are not small decisions. These are major brands structuring long-term commercial relationships around volunteer audiences.
+
+The addressability argument for sponsors is genuinely strong:
+- Every volunteer on Occasion HQ has a verified identity, confirmed event attendance, and a logged hours record. This is first-party data with genuine signal, not inferred interest.
+- Brands running performance marketing on Meta or Google are reaching people who might be interested in running shoes. Occasion HQ can reach people who confirmed they showed up to a race last Saturday.
+- The audience skews active, community-embedded, and digitally literate — high LTV customers for sports nutrition, footwear, apparel, and insurance brands.
+
+The argument for sponsors versus other channels:
+
+| Channel | Reach | Intent signal | Audience qualification |
+|---|---|---|---|
+| Meta/Google paid | High | Low (interest-based) | Self-reported or inferred |
+| Race entry sponsorship | Medium | Medium (event registrant) | Participant only |
+| Club sponsorship | Low | High | Member, long-term |
+| Occasion HQ volunteer vouchers | Medium (growing) | Very high (verified attendance) | Confirmed volunteer, multi-event |
+
+The Occasion HQ proposition is that it sits in a gap: the qualified commitment of a club member with the reach and measurability of a digital channel.
+
+**England Athletics already runs a "Room to Reward" voucher as part of its Regional Volunteer Awards.** This validates that the concept is neither novel nor offensive to the volunteer community when positioned correctly. The difference is that England Athletics distributes one voucher per regional ceremony winner. Occasion HQ can operationalise this at scale — every volunteer who crosses a defined threshold gets a reward, without a ceremony and without committee selection.
+
+#### The Case Against
+
+There is one genuine risk that must be confronted directly: gamification corruption of motivation.
+
+The copy library is explicit about this — "gamification language ('level up', 'streak', 'earn points', 'reward') — volunteering is intrinsically motivated." This is not just a tone call. There is a body of behavioural economics research (Frey and Jegen's crowding-out effect) showing that introducing extrinsic rewards into previously intrinsically motivated behaviour can reduce that behaviour when the rewards are withdrawn. If Occasion HQ creates a generation of volunteers who volunteer to collect voucher thresholds, the platform has done something harmful to the community it claims to serve.
+
+The risk materialises in a specific failure mode: volunteers who game the system by signing up for roles they do not intend to fill, in order to accumulate event credits, then cancelling at the last minute. A 10K race with 15% last-minute volunteer cancellations is worse than a race where the platform was never used.
+
+The second risk is sponsor dependency. If Occasion HQ positions volunteer rewards as a core feature, organisations and volunteers will expect them to persist. If the sponsor relationship with Nike or Saucony lapses, the platform degrades in perceived value. The architecture of the feature must insulate the core product from sponsor churn.
+
+The third risk is timing. The platform has no volunteer history yet. A voucher threshold of "10+ confirmed events" is meaningless at launch — no volunteer can reach it. Launching the feature too early produces a ghost programme: visible but unreachable, which reads as a broken promise.
+
+#### Recommended Approach for Idea A
+
+**Build the infrastructure now. Do not activate publicly until you have data.**
+
+The volunteer profile and hours record being built into the platform (POST-03) already creates the substrate. Logged hours, confirmed events, role diversity — these are data points the platform will have naturally by month 6 of live operation. The sponsor voucher feature is a layer on top of data that will exist anyway.
+
+**Stage the rollout in three phases:**
+
+Phase 1 (months 1–9, pre-commercial): No vouchers, no scoring visible to volunteers. Silently log volunteer history. Build the scoring model in the background. Identify what threshold distributions actually look like with real data before setting commercial thresholds publicly.
+
+Phase 2 (months 9–18, soft launch): Introduce the "Occasion Record" — a volunteer-facing view of their history. Confirmed events, hours, role diversity. Frame this as a credential, not a game. Language: "Your record" not "Your score." The hours certificate (POST-03 add-on) is the lead feature here. This is the Volunteer Passport concept from the growth strategy — building the data asset before monetising it.
+
+Phase 3 (months 18+, commercial): Approach sponsors with a clear pitch based on real audience data. "We have 2,000 volunteers who have confirmed attendance at 5+ events in the last 12 months. Here is their demographic profile and geographic distribution. Here is a redemption mechanic that puts your discount in front of them at the moment they complete their sixth event." At this point you have something to sell and you are not promising what you cannot deliver.
+
+**Scoring model — when it is built:**
+
+The threshold structure should weight confirmation over registration, and attendance diversity over pure volume. A volunteer who showed up to 8 different events for 3 different organisations is more interesting to a sponsor than a volunteer who confirmed for the same race 8 times.
+
+Proposed scoring dimensions (to be validated against actual volunteer cohort data at phase 2):
+
+| Dimension | Reasoning |
+|---|---|
+| Confirmed events (base count) | Attendance is the core signal. Registration counts for nothing. |
+| Unique organising organisations | Cross-org volunteering signals genuine community commitment |
+| Role diversity (unique role types) | "First Aid, Marshal, Finish Line, Photography" is a more active volunteer than 12x "Car Park Marshal" |
+| Consecutive event reliability | Volunteering for the same event across multiple years signals an anchor volunteer — high value to both platform and sponsor |
+| Hours logged | Raw time investment |
+
+Do not call this an "occasion score" externally. Call it the "volunteer record" or "your contributions." Score-language risks the gamification problem. Present it as a credential, not a ranking.
+
+**Redemption mechanics:**
+
+The mechanism must be frictionless and not require the volunteer to visit a separate sponsor portal. Recommended approach: unique single-use codes issued by Occasion HQ, delivered via email at the point of threshold crossing. The email subject line fits naturally into the existing copy system: "[Your Name] — you've reached a new milestone." The code is redeemable at the sponsor's checkout; the platform does not need to operate a redemption infrastructure beyond code issuance.
+
+Critically: the platform issues the code, not the sponsor. The volunteer never sees a promotional email from the sponsor. Occasion HQ controls the communication surface. The sponsor gets redemption data and brand association; it does not get the volunteer's email address. This maintains the platform's trust relationship with volunteers and creates a clean data boundary.
+
+**Sponsor acquisition strategy:**
+
+Approach in this order:
+
+1. Nutrition and recovery brands first (SiS, Maurten, Precision Fuel & Hydration, Veloforte). Lower commercial stakes, faster decision cycles, founder-accessible. A 10% discount code issued to 500 verified volunteers costs the brand almost nothing while generating genuine brand trial. These brands already sponsor race expos; this is a cheaper and more targeted version of the same thing.
+
+2. Sports footwear and apparel second (Brooks, Saucony, Asics UK, Sweaty Betty). Longer sales cycles and larger legal/commercial process. Brooks' parkrun relationship shows these brands understand volunteer-community channels. The pitch is: "we are building the verified volunteer database that parkrun does not have."
+
+3. Insurance and financial services third (Vitality UK, British Cycling insurance partners). Highest ACV, longest cycle, but the qualification data Occasion HQ holds is genuinely valuable to an insurer — confirmed event attendance is an activity proxy they would otherwise pay to infer.
+
+The pitch deck for sponsors should not lead with audience size (it will be small at first). It should lead with data quality: "verified attendance, not inferred interest." That is the differentiator versus Meta, Google, and race sponsorship. Show the depth of the data model — confirmed status, hours logged, role types, geographic distribution. The pitch is audience precision, not audience scale.
+
+**How Idea A interacts with POST-07 (Sponsor Placement):**
+
+POST-07 as currently defined is event-level: local businesses with regional activation budgets who want to reach event audiences via sponsor slots on published event pages. This is a different commercial motion from volunteer vouchers — it is contextual advertising adjacent to an event, analogous to a race programme advert.
+
+Idea A is a relationship-based commercial channel: brands reach volunteers based on their platform-wide history, not based on a single event. These are complementary, not competing. The distinction matters for positioning and for the sponsor pitch:
+
+- POST-07 is "reach people attending this event" — appropriate for local businesses, race suppliers, geographically constrained brands
+- Idea A vouchers are "reach your most committed community of volunteers platform-wide" — appropriate for national brands with athlete-segment marketing budgets
+
+POST-07 should be built as specified. Idea A is a separate commercial product with a later activation timeline. They share a sponsor profile type in the data model (the SPONSOR item type POST-07 requires) — Idea A can extend rather than replace that data model. A single sponsor entity might use both: sponsor a specific event (POST-07) and run a platform-wide volunteer voucher campaign (Idea A).
+
+**Risk summary:**
+
+| Risk | Severity | Mitigation |
+|---|---|---|
+| Gamification corrupts volunteer motivation | High | Phase 2 framing as credential not game; no score language; reward is a surprise, not a target |
+| Volunteer signs up to game the threshold then cancels | Medium | Score only credits confirmed attendance (not registration); cancellations within 48hrs of event reduce score |
+| Sponsor churns and feature degrades | Medium | Never promise ongoing rewards; each campaign is time-bounded; product works without sponsor layer |
+| Platform at launch has no audience to pitch sponsors | High | Do not approach sponsors until phase 3; build audience first |
+| Legal: GDPR and marketing consent on code issuance | Low | Codes are platform-sent, not sponsor-sent; treat as service communication not marketing, given the milestone trigger |
+
+---
+
+### Idea B: Annual Regional Community Events
+
+#### The Case For
+
+This is the most strategically coherent idea on the list, and also the most expensive to execute. The fact that Occasion HQ would be organising an occasion is not just a clever observation — it is a product-market fit demonstration and a brand proof-point simultaneously.
+
+The community flywheel argument is real. Platforms that build in-person moments earn loyalty that pure-digital products cannot replicate. Strava segments are good. But the Strava clubs that run physical meetups have materially higher retention and word-of-mouth. The Figma Config conference, Notion's community events, Airtable Universe — these are not product investments, they are trust investments. The in-person moment creates a cohort of highly engaged users who feel ownership of the platform, refer aggressively, and provide qualitative feedback that no survey captures.
+
+For a volunteer community specifically, this is even more powerful. Volunteers are people who already show up. They are by definition the population most likely to attend a celebration of showing up. The audience is pre-qualified and pre-motivated.
+
+The "best occasion of the year" award drives two behaviours that are commercially valuable:
+
+1. Organisers who want to win it will run better-structured events on Occasion HQ — more defined roles, better volunteer confirmation rates, more complete event pages. Award incentive alignment with platform quality.
+
+2. Nominees create organic marketing. A running club that gets nominated for "Best Occasion — South East 2027" will post about it in their Strava club, their WhatsApp groups, their club newsletter. Every nomination is a platform mention in a community Occasion HQ has not yet reached.
+
+The PR angle is legitimate and underrated. "Platform for volunteer-run events organises its own volunteer celebration" is a genuinely interesting story for running press (Runner's World UK, Athletics Weekly, the endurance community on social), for the charity press (Civil Society, Third Sector), and potentially for national features editors who cover community and volunteering ("the quiet army behind British road racing" etc.). It is not a hard sell for a journalist.
+
+England Athletics already runs regional volunteer award ceremonies across all 9 regions annually, typically September. The format exists and is validated. The gap is that England Athletics' ceremonies are athletics-focused and invite-only (nominated by clubs). Occasion HQ's event would be open to any volunteer who used the platform in the preceding year — a genuinely different scope.
+
+#### The Case Against
+
+The primary risk is premature execution. Running your own event when you have 50 volunteers on the platform means you are organising a dinner party, not a community gathering. The event's success is directly proportional to the size and engagement of the platform community it celebrates. An Occasion HQ community event in year one, before meaningful volunteer volume exists, does not build flywheel — it creates a small awkward gathering that reinforces how nascent the platform is.
+
+The second risk is resource. Physical events require operational capacity that a lean founding team does not have while the product is under active development. Even a modest dinner-format event for 80 people requires: venue sourcing, catering negotiation, sponsor activation, AV, speaker management, award nominations process, collateral design, ticketing, and on-the-day logistics. This is not a weekend project. It is a meaningful capacity commitment at the worst possible moment in the company's lifecycle.
+
+The revenue model question does not have a clean answer at early stage. Sponsor-funded means the event's quality depends on sponsor interest, which depends on audience size, which is the problem. Ticket-funded (say, £25–35/ticket) is possible but creates a pay-to-attend barrier for volunteers who already give their time for free. Free with no revenue model requires the company to absorb the full cost of running an event while it is pre-revenue.
+
+Regional vs national creates a sequencing problem. A single national event in London feels exclusive and geographically inaccessible to a Manchester running club. Four regional events in year one is operationally brutal. The right format at early stage is probably a single well-executed event in the platform's densest geography, presented as a pilot rather than a permanent regional programme.
+
+#### Recommended Approach for Idea B
+
+**Do not run this event until the platform has sufficient community to make it feel earned, not performed.**
+
+The threshold for "sufficient community" is approximately: 500+ verified volunteers who have attended at least one confirmed event on the platform, distributed across at least three geographic clusters, with at least 30 distinct organising organisations represented. This is an estimate — the real signal is whether the event, if announced, would be oversubscribed, not barely-subscribed. Below this threshold, the event is marketing spend without marketing return.
+
+**Target timing: 18–24 months post-launch.** If launch is Q3/Q4 2026, the first community event should be Q1/Q2 2028. This assumes the platform growth curve is on track. The event should not be calendar-fixed — it should be readiness-fixed. If the platform is significantly ahead of projection at month 12, pull the event forward. If behind, delay it. A poorly attended community event is worse than no event.
+
+**Format recommendation: a single annual event, not a regional programme, until year 3.**
+
+Year 1 event: One location — likely London or the Midlands depending on where the densest organiser cluster develops. Dinner format, 80–150 attendees (invitation-based, distributed between volunteer nominees, organising representatives, and community figures). Budget: £8–15k all-in. Revenue model: sponsor-covered (one title sponsor, category exclusivity) — target a sports brand already in the Idea A sponsor pipeline. Ticket-free for volunteers; organisers may have a nominal contribution (£10–15) to signal commitment without creating a price barrier.
+
+Year 2 event: Expand to two locations (South/North split). Introduce the open nomination process for the best occasion award. Target 250–350 total attendees across both events.
+
+Year 3+: Regional cadence (4–5 locations), open awards nomination, press coverage, potential broadcast/streaming for remote community engagement.
+
+**The "Best Occasion of the Year" award — design principles:**
+
+The award categories should map directly to the platform's event taxonomy and be structured to incentivise organiser behaviour on the platform:
+
+| Award | Selection method | Why it works |
+|---|---|---|
+| Best Occasion (overall) | Platform data + community vote | Premier award; maximum social sharing |
+| Best First Occasion | Platform data only (debut events) | Incentivises new organisations to run well from day one |
+| Most Occasions (organiser) | Platform data only (event count) | Rewards loyal, recurring organisers |
+| Volunteer of the Year | Community nomination | Volunteer-facing recognition; separate from organiser awards |
+| Best Volunteer Team | Platform data (fill rate + confirmed count) | Rewards organisers who build strong volunteer relationships |
+
+"Community vote" means Occasion HQ users (both organisers and volunteers) can nominate and vote via the platform. This is in-app engagement in the weeks before the event, which drives platform sessions and referral conversations.
+
+**The meta-argument — Occasion HQ uses its own product:**
+
+The event should be run entirely on Occasion HQ. Role definitions (venue host, registration desk, AV technician, photographer), volunteer sign-up through the platform, the confirmation flow, the event day check-in. This is not just symbolically satisfying — it is a product stress test, a sales demo for every prospective organiser in the room, and a content asset (photographs and quotes from the event seeded back to the content programme).
+
+The event day brief distributed to Occasion HQ community volunteers should use the platform's own copy system. The post-event email should reference the hours they logged. The Occasion Report next year should include the fill rate and confirmation data from the HQ event itself. This closes the loop cleanly.
+
+**Revenue model at first event:**
+
+Single title sponsor, approached as part of the Idea A sponsor pipeline. The sponsor gets:
+- Title naming (e.g., "The Saucony Occasion Awards 2028")
+- Brand presence at the event (backdrop, welcome slide, goody bag insert)
+- Listing on the event page and all event communications
+- A short speaking slot (3 minutes maximum — do not give a brand more than 3 minutes at a community event)
+- A set of Idea A-style voucher codes to distribute to attendees
+
+In return, the platform receives: full event cost coverage (venue, catering, AV, collateral). Target sponsor value: £8–12k. This is not an ambitious number for a brand with a sports marketing budget. It is an efficient activation for category exclusivity at a curated, qualified audience event.
+
+**PR strategy:**
+
+The media angle is not "platform launches awards ceremony." That is a press release nobody reads.
+
+The angle is: "The volunteers behind British community running are getting their own occasion." Focus the story on specific volunteers — the person who has marshalled the same race for 11 years, the retired GP who does first aid at every local triathlon. These are the voices. Occasion HQ is the infrastructure that found them and got them in a room. Pitch to:
+- Runner's World UK (lifestyle, volunteer appreciation angle)
+- Athletics Weekly (athletics community angle)
+- Third Sector (volunteering/charity angle)
+- Local press in the event's city (community interest, named individuals)
+
+A regional winner of "Volunteer of the Year" is a genuinely newsworthy story in their local paper. Occasion HQ does not need to be the headline — it needs to be the origin of the story.
+
+---
+
+### How Ideas A and B Interact With Each Other
+
+The two ideas are more connected than they first appear. Both require the same underlying data asset: a rich, verified volunteer history. Both are more valuable the larger and more active the volunteer community on the platform is. Both have a timing dependency on platform scale that means neither should be activated in the first year.
+
+The interaction structure:
+
+Idea A (voucher programme) builds the volunteer record infrastructure (logged hours, confirmed event count, role diversity) that also powers the award nominations for Idea B. The "Volunteer of the Year" nominee at the Idea B event is identifiable from the Idea A scoring data. The infrastructure is shared.
+
+Idea B (community event) creates the social proof and community warmth that makes Idea A feel earned rather than transactional. A volunteer who attended the Occasion HQ event and watched a peer win an award is a more motivated platform participant than a volunteer who received a discount code in an email. The events build the emotional substrate that makes the voucher programme land correctly.
+
+Idea A sponsors and Idea B sponsors overlap. A brand that runs a platform-wide voucher campaign (Idea A) is a natural title sponsor for the community event (Idea B). This creates a bundled commercial relationship with higher ACV than either product alone.
+
+**Combined sequencing:**
+
+| Stage | Timeline | Action |
+|---|---|---|
+| Foundation | Launch – month 9 | Build volunteer record infrastructure silently as part of POST-03. No external features. |
+| Credential launch | Month 9–18 | Launch "Your Occasion Record" as a volunteer-facing feature. Frame as credential. Approach first Idea A sponsors with audience data. |
+| Voucher launch | Month 18 | First sponsor voucher campaign. Single brand, defined threshold, time-bounded. Measure redemption and volunteer reaction carefully. |
+| Event announcement | Month 18–20 | Announce first community event for month 24. Open nominations through the platform. |
+| First community event | Month 24 | Run the event. Use the platform for its own coordination. Collect content and press coverage. |
+| Regional expansion | Month 30+ | Two-location events. Expand Idea A to second sponsor brand. |
+
+---
+
+### Interaction With the Existing Roadmap
+
+**POST-07 (Sponsor Placement)** should proceed as specified — it is a different commercial product serving a different sponsor audience (local/regional businesses, event-level placement). Do not conflate it with Idea A.
+
+However: the SPONSOR item type and sponsor registration flow that POST-07 requires should be designed with Idea A in mind from the start. A sponsor entity that creates a POST-07 event placement should be the same data entity that later runs a platform-wide volunteer voucher campaign. Design the data model once.
+
+**POST-03 (Impact Record & Hour Certificates)** is the dependency for both Idea A and Idea B. It must be in the roadmap before either idea activates. The volunteer hours and confirmed event data are what make the voucher threshold meaningful and what identifies award nominees. POST-03 is scheduled already — this confirms its priority is correctly placed.
+
+**POST-04 (Skill-Based Volunteer Matching)** is less directly connected but relevant: the matching data enriches the volunteer profile, which adds signal to the volunteer record. A volunteer whose skills have been matched and confirmed across multiple events is a more attractive voucher recipient and award nominee than one with only a headcount-fill history.
+
+The recommended roadmap addition is a single new post-MVP item, sitting after POST-03 and before any sponsor commercial activation:
+
+**POST-08 — Volunteer Record & Sponsor Infrastructure**
+- Volunteer-facing "Your Occasion Record" screen (confirmed events, hours, role diversity)
+- Scoring engine (internal, not yet exposed as a public score)
+- Sponsor entity data model extension (building on POST-07 SPONSOR item type)
+- Code issuance infrastructure for volunteer vouchers
+- Award nomination workflow (for Idea B event)
+
+This keeps the infrastructure work consolidated rather than distributed across three separate PRDs and keeps the commercial activation cleanly separated from the credential launch.
+
+---
+
+### Summary Verdicts
+
+| | Idea A: Sponsor Vouchers | Idea B: Community Events |
+|---|---|---|
+| Strategic merit | High — genuinely differentiated sponsor channel with strong data story | High — community flywheel, brand proof-point, PR asset |
+| Risk level | Medium — gamification risk manageable with careful framing | Low-Medium — timing risk, not concept risk |
+| Timing | Activate at month 18, after volunteer record infrastructure live | First event at month 24; do not announce before month 18 |
+| Dependency | POST-03 (hours logging), POST-07 data model extension | POST-03 + Idea A infrastructure; sufficient volunteer community volume |
+| Revenue type | Direct (sponsor commercial agreements) | Indirect (platform loyalty, PR, sponsor relationship amplification) |
+| Recommended action | Build infrastructure now, activate commercially at month 18 | Plan now, build infrastructure with Idea A, run first event at month 24 |
+
+Neither idea should be on the product backlog for the current MVP sprint. Both ideas depend on data and community that do not yet exist. The work to do now is to ensure that the infrastructure being built (POST-03 specifically) is designed with these use cases in mind, so the activation in 18 months does not require a rebuild.
+
+The copy constraint from the copy library bears repeating: do not use gamification language with volunteers. When these features launch, the framing must be credential and recognition, not points and rewards. The word "occasion" does the work here: "Your Occasion Record" is a record of occasions you rose to. That is the right register.
