@@ -15,7 +15,7 @@ export function LoginForm({
   endpoint = '/auth/login',
   redirectTo = '/dashboard',
 }: LoginFormProps = {}) {
-  const { login } = useAuth()
+  const { login, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,6 +32,7 @@ export function LoginForm({
         await login({ email, password })
       } else {
         await apiClient.post(endpoint, { email, password })
+        await refreshUser()
       }
       navigate(redirectTo)
     } catch (err) {

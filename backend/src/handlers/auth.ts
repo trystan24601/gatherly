@@ -328,22 +328,38 @@ authRouter.post('/password-reset/confirm', async (req: Request, res: Response): 
   const newHash = await hashPassword(password)
   const userId = resetItem.userId as string
 
-  // Update the password hash on the USER item
-  await updateItem(
-    TABLE(),
-    { PK: `USER#${userId}`, SK: 'PROFILE' },
-    'SET passwordHash = :hash',
-    { ':hash': newHash }
-  )
-
-  // Mark the reset token as used
-  await updateItem(
-    TABLE(),
-    { PK: `RESET#${token}`, SK: 'PROFILE' },
-    'SET #used = :used',
-    { ':used': true },
-    { '#used': 'used' }
-  )
+  // Atomically update the password AND mark the token as used.
+  // The condition on the RESET item prevents a concurrent request from using
+  // the same token after we've already checked used === false above (TOCTOU fix).
+  try {
+    await transactWrite([
+      {
+        Update: {
+          TableName: TABLE(),
+          Key: { PK: `USER#${userId}`, SK: 'PROFILE' },
+          UpdateExpression: 'SET passwordHash = :hash',
+          ExpressionAttributeValues: { ':hash': newHash },
+        },
+      },
+      {
+        Update: {
+          TableName: TABLE(),
+          Key: { PK: `RESET#${token}`, SK: 'PROFILE' },
+          UpdateExpression: 'SET #used = :used',
+          ConditionExpression: '#used = :false',
+          ExpressionAttributeValues: { ':used': true, ':false': false },
+          ExpressionAttributeNames: { '#used': 'used' },
+        },
+      },
+    ])
+  } catch (err: unknown) {
+    const awsErr = err as { name?: string }
+    if (awsErr?.name === 'TransactionCanceledException') {
+      res.status(400).json({ error: 'Invalid or expired reset token.' })
+      return
+    }
+    throw err
+  }
 
   res.status(200).json({ message: 'Password updated successfully.' })
 })

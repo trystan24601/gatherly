@@ -4,8 +4,10 @@
  * Tracks failed attempts only. Allows up to MAX_ATTEMPTS per IP within a
  * WINDOW_MS sliding window. Returns true when the caller is blocked.
  *
- * This is acceptable for the single-Lambda MVP. For a multi-instance
- * deployment, replace with a Redis-backed counter.
+ * TODO: SECURITY — not durable, must be replaced with Redis (ElastiCache) before production.
+ * This Map is process-scoped: any Lambda cold start or container restart resets all
+ * counters, making the rate limit ineffective across restarts or concurrent instances.
+ * See pre-production blockers in MVP-PLAN.md.
  */
 
 const MAX_ATTEMPTS = 5

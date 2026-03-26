@@ -110,7 +110,6 @@ const VALID_SESSION = {
 
 beforeEach(() => {
   process.env.DYNAMODB_TABLE_NAME = 'test-table'
-  process.env.SESSION_SECRET = 'test-secret'
   process.env.NODE_ENV = 'test'
   // Reset all mocks including queued mockResolvedValueOnce calls and implementations
   vi.resetAllMocks()
@@ -518,7 +517,12 @@ describe('POST /auth/password-reset/confirm', () => {
       .send({ token: 'valid-token', password: 'NewPass123!' })
 
     expect(res.status).toBe(200)
-    expect(updateItem).toHaveBeenCalled()
+    expect(transactWrite).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ Update: expect.objectContaining({ Key: { PK: 'USER#user-vol', SK: 'PROFILE' } }) }),
+        expect.objectContaining({ Update: expect.objectContaining({ Key: { PK: 'RESET#valid-token', SK: 'PROFILE' }, ConditionExpression: '#used = :false' }) }),
+      ])
+    )
   })
 
   it('returns 400 for an invalid token', async () => {
@@ -546,6 +550,27 @@ describe('POST /auth/password-reset/confirm', () => {
     const res = await request(app)
       .post('/auth/password-reset/confirm')
       .send({ token: 'expired-token', password: 'NewPass123!' })
+
+    expect(res.status).toBe(400)
+    expect(res.body.error).toBe('Invalid or expired reset token.')
+  })
+
+  it('returns 400 when transactWrite fails due to concurrent token reuse (TOCTOU)', async () => {
+    const validResetItem = {
+      PK: 'RESET#concurrent-token',
+      SK: 'PROFILE',
+      token: 'concurrent-token',
+      userId: 'user-vol',
+      expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      used: false,
+    }
+    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(validResetItem)
+    const err = Object.assign(new Error('Transaction cancelled'), { name: 'TransactionCanceledException' })
+    ;(transactWrite as ReturnType<typeof vi.fn>).mockRejectedValueOnce(err)
+
+    const res = await request(app)
+      .post('/auth/password-reset/confirm')
+      .send({ token: 'concurrent-token', password: 'NewPass123!' })
 
     expect(res.status).toBe(400)
     expect(res.body.error).toBe('Invalid or expired reset token.')
