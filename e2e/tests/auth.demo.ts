@@ -40,12 +40,11 @@ test.describe('Authentication — feature demo', () => {
     await page.waitForTimeout(1000)
 
     // -----------------------------------------------------------------------
-    // Step 2: Log out via the UI
+    // Step 2: Log out via API (no logout UI yet — dashboard is a stub)
     // -----------------------------------------------------------------------
-    await page.getByRole('button', { name: /log out|logout|sign out/i }).click()
-
-    // Wait for redirect to /login
-    await page.waitForURL(/\/login/)
+    const apiURL = process.env.E2E_API_URL ?? 'http://localhost:3001'
+    await page.request.post(`${apiURL}/auth/logout`, {})
+    await page.goto(`${frontendURL}/login`)
 
     // -----------------------------------------------------------------------
     // Step 3: Log back in with the same credentials

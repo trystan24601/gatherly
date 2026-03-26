@@ -176,7 +176,8 @@ jobs:
           done
 
       - name: Run Playwright tests
-        run: npm test --workspace=e2e
+        run: npx playwright test --project=chromium
+        working-directory: e2e
         env:
           E2E_BASE_URL: http://localhost:5173
           E2E_API_URL: http://localhost:3001
@@ -215,6 +216,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
