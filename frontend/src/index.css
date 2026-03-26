@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+
 /* Gatherly design tokens — loaded from tailwind.config.js */
 :root {
   --color-bg: #0f0f10;
@@ -35,6 +37,34 @@
   --color-info: #3b82f6;
   --color-info-subtle: rgba(59,130,246,0.1);
   --color-info-mid: rgba(59,130,246,0.25);
+
+  --badge-pending-bg:         rgba(245, 158, 11, 0.12);
+  --badge-pending-border:     rgba(245, 158, 11, 0.35);
+  --badge-pending-text:       #F59E0B;
+
+  --badge-confirmed-bg:       rgba(74, 222, 128, 0.09);
+  --badge-confirmed-border:   rgba(74, 222, 128, 0.25);
+  --badge-confirmed-text:     #4ADE80;
+
+  --badge-declined-bg:        rgba(239, 68, 68, 0.09);
+  --badge-declined-border:    rgba(239, 68, 68, 0.25);
+  --badge-declined-text:      #EF4444;
+
+  --badge-cancelled-bg:       rgba(72, 79, 88, 0.20);
+  --badge-cancelled-border:   rgba(72, 79, 88, 0.40);
+  --badge-cancelled-text:     #848D97;
+
+  --badge-draft-bg:           rgba(72, 79, 88, 0.12);
+  --badge-draft-border:       rgba(72, 79, 88, 0.25);
+  --badge-draft-text:         #484F58;
+
+  --badge-published-bg:       rgba(74, 222, 128, 0.09);
+  --badge-published-border:   rgba(74, 222, 128, 0.22);
+  --badge-published-text:     #4ADE80;
+
+  --badge-filled-bg:          rgba(74, 222, 128, 0.15);
+  --badge-filled-border:      rgba(74, 222, 128, 0.40);
+  --badge-filled-text:        #4ADE80;
 
   --radius-sm: 4px;
   --radius-md: 8px;
