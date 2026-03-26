@@ -8,7 +8,7 @@
  * level so tests are hermetic and fast. The Express app is imported from
  * ../../app which will mount the /auth router once implemented.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import request from 'supertest'
 
 // --------------------------------------------------------------------------
@@ -54,7 +54,7 @@ vi.mock('../../lib/auth', async (importOriginal) => {
 // --------------------------------------------------------------------------
 
 import { app } from '../../app'
-import { getItem, putItem, deleteItem, updateItem, transactWrite } from '../../lib/dynamodb'
+import { getItem, putItem, deleteItem, transactWrite } from '../../lib/dynamodb'
 import { createSession, getSession, isSessionExpired } from '../../lib/session'
 import { isRateLimited } from '../../lib/rateLimiter'
 import { verifyPassword } from '../../lib/auth'
@@ -121,7 +121,6 @@ beforeEach(() => {
   ;(isSessionExpired as ReturnType<typeof vi.fn>).mockReturnValue(false)
   ;(putItem as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
   ;(deleteItem as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
-  ;(updateItem as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
   ;(transactWrite as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
 })
 
@@ -132,7 +131,7 @@ beforeEach(() => {
 describe('POST /auth/register', () => {
   it('returns 201 with user profile (no passwordHash) and sets sid cookie on valid payload', async () => {
     // No existing USEREMAIL item
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
 
     const res = await request(app)
       .post('/auth/register')
@@ -159,7 +158,7 @@ describe('POST /auth/register', () => {
 
   it('returns 409 with descriptive error when email is already registered', async () => {
     // USEREMAIL item exists — simulate TransactWrite throwing TransactionCanceledException
-    ;(transactWrite as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+    (transactWrite as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       Object.assign(new Error('Transaction cancelled'), {
         name: 'TransactionCanceledException',
       })
@@ -234,7 +233,7 @@ describe('POST /auth/register', () => {
 
 describe('POST /auth/login', () => {
   it('returns 200 with profile and sets sid cookie on valid credentials', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>)
+    (getItem as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ PK: 'USEREMAIL#vol@example.com', SK: 'LOCK', userId: 'user-vol' })
       .mockResolvedValueOnce(VOLUNTEER_USER)
 
@@ -255,7 +254,7 @@ describe('POST /auth/login', () => {
   })
 
   it('returns 401 with non-enumerable error when password is wrong', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>)
+    (getItem as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ PK: 'USEREMAIL#vol@example.com', SK: 'LOCK', userId: 'user-vol' })
       .mockResolvedValueOnce(VOLUNTEER_USER)
     ;(verifyPassword as ReturnType<typeof vi.fn>).mockResolvedValueOnce(false)
@@ -269,7 +268,7 @@ describe('POST /auth/login', () => {
   })
 
   it('returns 401 with same error when email is unknown (no enumeration)', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
 
     const res = await request(app)
       .post('/auth/login')
@@ -280,7 +279,7 @@ describe('POST /auth/login', () => {
   })
 
   it('returns 429 on the 6th failed login attempt from the same IP', async () => {
-    ;(isRateLimited as ReturnType<typeof vi.fn>).mockReturnValueOnce(true)
+    (isRateLimited as ReturnType<typeof vi.fn>).mockReturnValueOnce(true)
 
     const res = await request(app)
       .post('/auth/login')
@@ -297,7 +296,7 @@ describe('POST /auth/login', () => {
 
 describe('POST /auth/org/login', () => {
   it('returns 200 with profile including orgId for valid org admin credentials', async () => {
-    ;(createSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (createSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       sessionId: 'sess-org',
       userId: 'user-admin',
       role: 'ORG_ADMIN',
@@ -319,7 +318,7 @@ describe('POST /auth/org/login', () => {
   })
 
   it('returns 401 for invalid credentials', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
 
     const res = await request(app)
       .post('/auth/org/login')
@@ -329,7 +328,7 @@ describe('POST /auth/org/login', () => {
   })
 
   it('returns 401 when user exists but is not an ORG_ADMIN', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>)
+    (getItem as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ PK: 'USEREMAIL#vol@example.com', SK: 'LOCK', userId: 'user-vol' })
       .mockResolvedValueOnce(VOLUNTEER_USER)
 
@@ -347,7 +346,7 @@ describe('POST /auth/org/login', () => {
 
 describe('POST /auth/admin/login', () => {
   it('returns 200 for valid super admin credentials', async () => {
-    ;(createSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (createSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       sessionId: 'sess-super',
       userId: 'user-super',
       role: 'SUPER_ADMIN',
@@ -367,7 +366,7 @@ describe('POST /auth/admin/login', () => {
   })
 
   it('returns 401 for invalid credentials', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
 
     const res = await request(app)
       .post('/auth/admin/login')
@@ -377,7 +376,7 @@ describe('POST /auth/admin/login', () => {
   })
 
   it('returns 401 when user exists but is not SUPER_ADMIN', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>)
+    (getItem as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ PK: 'USEREMAIL#vol@example.com', SK: 'LOCK', userId: 'user-vol' })
       .mockResolvedValueOnce(VOLUNTEER_USER)
 
@@ -421,7 +420,7 @@ describe('POST /auth/logout', () => {
 
 describe('GET /auth/me', () => {
   it('returns 200 with user profile when a valid sid cookie is present', async () => {
-    ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce(VALID_SESSION)
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce(VALID_SESSION)
     ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(VOLUNTEER_USER)
 
     const res = await request(app)
@@ -462,7 +461,7 @@ describe('GET /auth/me', () => {
   })
 
   it('returns 401 when session id is not found in DB', async () => {
-    ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
 
     const res = await request(app)
       .get('/auth/me')
@@ -478,7 +477,7 @@ describe('GET /auth/me', () => {
 
 describe('POST /auth/password-reset/request', () => {
   it('returns 200 for a known email without revealing existence', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>)
+    (getItem as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({ PK: 'USEREMAIL#vol@example.com', SK: 'LOCK', userId: 'user-vol' })
       .mockResolvedValueOnce(VOLUNTEER_USER)
 
@@ -490,7 +489,7 @@ describe('POST /auth/password-reset/request', () => {
   })
 
   it('returns 200 for an unknown email (no enumeration)', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
 
     const res = await request(app)
       .post('/auth/password-reset/request')
@@ -526,7 +525,7 @@ describe('POST /auth/password-reset/confirm', () => {
   })
 
   it('returns 400 for an invalid token', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
 
     const res = await request(app)
       .post('/auth/password-reset/confirm')

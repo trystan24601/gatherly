@@ -27,7 +27,7 @@ vi.mock('../../../lib/api', () => ({
 
 function renderWithRouter(ui: React.ReactElement) {
   // GET /auth/me returns 401 — user is not logged in
-  ;(apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('401'))
+  (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('401'))
   return render(
     <BrowserRouter>
       <AuthProvider>{ui}</AuthProvider>
@@ -70,7 +70,7 @@ describe('<LoginForm>', () => {
   })
 
   it('calls apiClient.post with /auth/login and credentials on submit', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       userId: 'u1',
       email: 'test@example.com',
       role: 'VOLUNTEER',
@@ -91,7 +91,7 @@ describe('<LoginForm>', () => {
   })
 
   it('displays an inline error message on 401 response', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
+    (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
       status: 401,
       body: { error: 'Invalid email or password.' },
     })
@@ -108,7 +108,7 @@ describe('<LoginForm>', () => {
   })
 
   it('displays rate-limit message on 429 response', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
+    (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
       status: 429,
       body: { error: 'Too many login attempts. Try again in 15 minutes.' },
     })

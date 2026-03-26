@@ -39,7 +39,7 @@ function AuthDisplay() {
 describe('AuthContext', () => {
   it('initially returns { user: null, loading: true }', async () => {
     // GET /auth/me never resolves during this test
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}))
+    (apiClient.get as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}))
 
     render(
       <BrowserRouter>
@@ -53,7 +53,7 @@ describe('AuthContext', () => {
   })
 
   it('calls GET /auth/me on mount', async () => {
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       userId: 'u1',
       email: 'vol@example.com',
       role: 'VOLUNTEER',
@@ -73,7 +73,7 @@ describe('AuthContext', () => {
   })
 
   it('sets user and loading: false on successful GET /auth/me', async () => {
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       userId: 'u1',
       email: 'vol@example.com',
       role: 'VOLUNTEER',
@@ -93,7 +93,7 @@ describe('AuthContext', () => {
   })
 
   it('sets user: null and loading: false on 401 from GET /auth/me', async () => {
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+    (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       Object.assign(new Error('401'), { status: 401 })
     )
 
@@ -111,7 +111,7 @@ describe('AuthContext', () => {
   })
 
   it('login() calls POST /auth/login and updates user state', async () => {
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('401'))
+    (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('401'))
     ;(apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       userId: 'u1',
       email: 'vol@example.com',
@@ -152,7 +152,7 @@ describe('AuthContext', () => {
   })
 
   it('logout() calls POST /auth/logout and clears user state', async () => {
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       userId: 'u1',
       email: 'vol@example.com',
       role: 'VOLUNTEER',
@@ -192,7 +192,7 @@ describe('AuthContext', () => {
 
 describe('<ProtectedRoute>', () => {
   it('renders a loading indicator when loading: true', () => {
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}))
+    (apiClient.get as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}))
 
     render(
       <BrowserRouter>
@@ -209,7 +209,7 @@ describe('<ProtectedRoute>', () => {
   })
 
   it('redirects to /login when user is null (unauthenticated)', async () => {
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('401'))
+    (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('401'))
 
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
@@ -235,7 +235,7 @@ describe('<ProtectedRoute>', () => {
   })
 
   it('renders children when user is authenticated with the correct role', async () => {
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       userId: 'u1',
       role: 'VOLUNTEER',
     })
@@ -256,7 +256,7 @@ describe('<ProtectedRoute>', () => {
   })
 
   it('redirects to /login when authenticated with wrong role', async () => {
-    ;(apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       userId: 'u1',
       role: 'VOLUNTEER',
     })

@@ -25,7 +25,7 @@ vi.mock('../../../lib/api', () => ({
 }))
 
 function renderWithRouter(ui: React.ReactElement) {
-  ;(apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('401'))
+  (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('401'))
   return render(
     <BrowserRouter>
       <AuthProvider>{ui}</AuthProvider>
@@ -54,7 +54,7 @@ describe('<OrgLoginForm>', () => {
   })
 
   it('calls apiClient.post with /auth/org/login on submit', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       userId: 'u1',
       email: 'admin@org.com',
       role: 'ORG_ADMIN',
@@ -76,7 +76,7 @@ describe('<OrgLoginForm>', () => {
   })
 
   it('displays an error message on failed login', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
+    (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
       status: 401,
       body: { error: 'Invalid email or password.' },
     })

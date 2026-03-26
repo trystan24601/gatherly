@@ -25,7 +25,7 @@ vi.mock('../../../lib/api', () => ({
 }))
 
 function renderWithRouter(ui: React.ReactElement) {
-  ;(apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('401'))
+  (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('401'))
   return render(
     <BrowserRouter>
       <AuthProvider>{ui}</AuthProvider>
@@ -74,7 +74,7 @@ describe('<RegisterForm>', () => {
   })
 
   it('calls apiClient.post with /auth/register on valid submit', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       userId: 'u1',
       email: 'new@example.com',
       role: 'VOLUNTEER',
@@ -99,7 +99,7 @@ describe('<RegisterForm>', () => {
   })
 
   it('displays 409 duplicate-email error as a field-level error', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
+    (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce({
       status: 409,
       body: { error: 'An account with this email already exists.' },
     })

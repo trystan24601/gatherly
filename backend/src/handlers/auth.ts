@@ -18,7 +18,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { hashPassword, verifyPassword, isStrongPassword } from '../lib/auth'
 import { createSession, getSession, deleteSession, isSessionExpired } from '../lib/session'
 import { isRateLimited, recordFailedAttempt } from '../lib/rateLimiter'
-import { getItem, putItem, updateItem, transactWrite } from '../lib/dynamodb'
+import { getItem, putItem, transactWrite } from '../lib/dynamodb'
 import { sendPasswordResetEmail } from '../lib/mailer'
 
 const COOKIE_NAME = 'sid'
@@ -40,7 +40,7 @@ function cookieOptions() {
 }
 
 function stripSensitiveFields(user: Record<string, unknown>): Record<string, unknown> {
-  const { passwordHash: _ph, PK: _pk, SK: _sk, GSI2PK: _g2pk, GSI2SK: _g2sk, ...safe } = user
+  const { passwordHash: _ph, PK: _pk, SK: _sk, GSI2PK: _g2pk, GSI2SK: _g2sk, ...safe } = user // eslint-disable-line @typescript-eslint/no-unused-vars
   return safe
 }
 

@@ -43,7 +43,7 @@ describe('<ForgotPasswordForm>', () => {
   })
 
   it('calls apiClient.post with /auth/password-reset/request on submit', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       message: 'If that email is registered, a reset link has been sent.',
     })
     const user = userEvent.setup()
@@ -60,7 +60,7 @@ describe('<ForgotPasswordForm>', () => {
   })
 
   it('shows success message after submit regardless of whether email exists', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       message: 'If that email is registered, a reset link has been sent.',
     })
     const user = userEvent.setup()
@@ -78,7 +78,7 @@ describe('<ForgotPasswordForm>', () => {
   })
 
   it('shows success message even when API returns an error response', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network error'))
+    (apiClient.post as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network error'))
     const user = userEvent.setup()
     renderWithRouter(<ForgotPasswordForm />)
 

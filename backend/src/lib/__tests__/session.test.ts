@@ -24,7 +24,7 @@ beforeEach(() => {
 
 describe('session lib — createSession', () => {
   it('calls putItem with PK=SESSION#<id> and SK=PROFILE', async () => {
-    const session = await createSession('user-123', 'VOLUNTEER')
+    await createSession('user-123', 'VOLUNTEER')
 
     expect(putItem).toHaveBeenCalledOnce()
     const [, item] = (putItem as ReturnType<typeof vi.fn>).mock.calls[0] as [string, Record<string, unknown>]
@@ -33,7 +33,7 @@ describe('session lib — createSession', () => {
   })
 
   it('includes sessionId, userId, role, createdAt, expiresAt in the item', async () => {
-    const session = await createSession('user-123', 'VOLUNTEER')
+    await createSession('user-123', 'VOLUNTEER')
 
     const [, item] = (putItem as ReturnType<typeof vi.fn>).mock.calls[0] as [string, Record<string, unknown>]
     expect(typeof item.sessionId).toBe('string')
@@ -70,7 +70,7 @@ describe('session lib — createSession', () => {
 
 describe('session lib — getSession', () => {
   it('calls getItem with PK=SESSION#<id> and SK=PROFILE', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
     await getSession('sess-abc')
 
     expect(getItem).toHaveBeenCalledWith(
@@ -80,7 +80,7 @@ describe('session lib — getSession', () => {
   })
 
   it('returns undefined when item not found', async () => {
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
     const result = await getSession('nonexistent')
     expect(result).toBeUndefined()
   })
