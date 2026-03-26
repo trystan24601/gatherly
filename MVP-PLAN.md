@@ -174,6 +174,67 @@ The following are documented here so they are never accidentally picked up in sp
 - Background check / DBS status
 - Bulk admin operations
 
+---
+
+### 1.3 Post-MVP Roadmap
+
+Features confirmed for the backlog, in rough priority order. Each needs a PRD before sprint planning.
+
+#### POST-01 — Shareable Event Link
+
+**Why it matters:** This is the cold-start bypass. Organisers will have existing volunteer communities in WhatsApp groups and email lists before Occasion HQ has a volunteer pool of its own. A clean, shareable event URL lets them bring their own volunteers onto the platform on day one — each share is an organic acquisition event. This is how the volunteer pool grows before network effects kick in.
+
+**What it is:** A persistent, human-readable public URL for each published event (e.g. `occasionhq.com/events/redhill-10k-2026`) that:
+- Renders the full event detail (name, date, roles, spots remaining) without requiring login
+- Prompts unauthenticated visitors to create a free account to apply for a role — with a single-field email entry that pre-fills the registration form
+- Includes a copy-to-clipboard button and native mobile share sheet trigger (`navigator.share`) so organisers can share directly from the event dashboard
+- Shows an Open Graph preview (event name, date, org name, a role count line) so the link unfurls correctly in WhatsApp, iMessage, Slack, and Twitter/X
+- Works on the organiser side too — the event dashboard has a "Share this event" action that copies the URL and optionally opens the native share sheet
+
+**Dependencies:** MVP-06 (event lifecycle), MVP-07 (event discovery). The public event URL is already part of the discovery feed — this feature adds the share action and Open Graph meta tags.
+
+---
+
+#### POST-02 — Lift-share Matching
+
+**Why it matters:** The single most differentiating feature. No current volunteer platform addresses transport. A confirmed volunteer who can't get to the event is a no-show — the fill rate the organiser sees is a lie. Lift-share matching uses data the platform already has (confirmed volunteer postcodes, event location, shift start time) to propose travel groups. See the Occasion Report for the full algorithm design, privacy model, and data schema.
+
+**What it is:** Opt-in per-event. Confirmed volunteers can register as a driver (with seats) or passenger. The platform matches on: same event, departure window overlap, route compatibility (bearing from origin to venue), and detour cost. Matches are proposed — both parties must accept before contact details are revealed. Full privacy model: origin town shown, full postcode never shared.
+
+**Dependencies:** MVP-08 (volunteer registration — confirmed status required for matching), GSI9, new LIFTSHARE item types. See OCCASION-REPORT.md for full technical spec.
+
+---
+
+#### POST-03 — Volunteer Impact Record & Hour Certificates
+
+**Why it matters:** Highest-performing monetisation add-on. Volunteers increasingly need documented evidence of service hours (university applications, citizenship, employer CSR). Charities need grant-ready impact reports. Neither is served by any current platform. This is the Professional tier gate.
+
+**What it is:** Automatic hour logging when an event transitions to COMPLETED. Per-volunteer PDF certificate ("Jane Smith contributed 34 hours across 5 events"). Per-organisation impact report PDF for grant applications and board reporting.
+
+---
+
+#### POST-04 — Skill-based Volunteer Matching Notifications
+
+**Why it matters:** Moves the platform from pull (volunteer browses) to push (platform notifies). When an event is published, the matching worker queries volunteers whose skills align with the event's roles and notifies them. Requires GSI7 (volunteer-by-skill reverse index). See OCCASION-REPORT.md for the full matching algorithm.
+
+---
+
+#### POST-05 — Supplier Matching
+
+**Why it matters:** Extends the orchestration model beyond volunteers. When an event is published with supplier needs (timing chips, first aid, catering), the platform surfaces matched local suppliers. Requires new SUPPLIER item type, GSI8, and the supplier registration flow.
+
+---
+
+#### POST-06 — Event Templates & AI-Assisted Setup
+
+**Why it matters:** Reduces the activation barrier for new organisers. "I'm running a 10K" → pre-populated role structure in 60 seconds. Dramatically reduces time-to-first-published-event.
+
+---
+
+#### POST-07 — Sponsor Placement
+
+**Why it matters:** Third revenue layer (after subscriptions and supplier listings). Local businesses with regional activation budgets want to reach event audiences. Requires sponsor profile type, event sponsor slot items, and a two-sided confirmation flow.
+
 ### 1.3 Success Metric for MVP
 
 "We are ready for a real organisation to use this" means:
