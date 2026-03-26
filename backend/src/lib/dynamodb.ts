@@ -107,6 +107,7 @@ export interface TransactWriteItem {
     TableName: string
     Key: Record<string, unknown>
     UpdateExpression: string
+    ConditionExpression?: string
     ExpressionAttributeValues?: Record<string, unknown>
     ExpressionAttributeNames?: Record<string, string>
   }
