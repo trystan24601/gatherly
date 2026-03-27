@@ -3,11 +3,12 @@
  *
  * Written in the Red phase — tests must fail before implementation exists.
  */
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '../../context/AuthContext'
+import type { EventSummary } from '../../lib/events'
 
 // --------------------------------------------------------------------------
 // Module mocks
@@ -55,7 +56,7 @@ const ORG_ADMIN_USER = {
   orgStatus: 'APPROVED',
 }
 
-const DRAFT_EVENT = {
+const DRAFT_EVENT: EventSummary = {
   eventId: 'event-draft-1',
   title: 'Draft Event',
   eventDate: '2027-06-15',
@@ -66,7 +67,7 @@ const DRAFT_EVENT = {
   fillRate: 0.333,
 }
 
-const PUBLISHED_EVENT = {
+const PUBLISHED_EVENT: EventSummary = {
   eventId: 'event-pub-1',
   title: 'Published Event',
   eventDate: '2027-07-20',

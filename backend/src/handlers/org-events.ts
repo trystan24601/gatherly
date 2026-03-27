@@ -33,21 +33,13 @@ export const orgEventsRouter = Router()
 
 /** Strip DynamoDB internal keys from an event item before returning it. */
 function stripEventKeys(item: Record<string, unknown>): Record<string, unknown> {
-  const {
-    PK: _pk,
-    SK: _sk,
-    GSI3PK: _g3pk,
-    GSI3SK: _g3sk,
-    GSI4PK: _g4pk,
-    GSI4SK: _g4sk,
-    ...safe
-  } = item
+  const { PK: _pk, SK: _sk, GSI3PK: _g3pk, GSI3SK: _g3sk, GSI4PK: _g4pk, GSI4SK: _g4sk, ...safe } = item // eslint-disable-line @typescript-eslint/no-unused-vars
   return safe
 }
 
 /** Strip DynamoDB internal keys from a role item before returning it. */
 function stripRoleKeys(item: Record<string, unknown>): Record<string, unknown> {
-  const { PK: _pk, SK: _sk, ...safe } = item
+  const { PK: _pk, SK: _sk, ...safe } = item // eslint-disable-line @typescript-eslint/no-unused-vars
   return safe
 }
 
@@ -100,7 +92,6 @@ function validateEventFields(
   }
 
   // eventDate validation
-  const eventDate = (fields.eventDate as string | undefined) ?? (existing?.eventDate as string | undefined)
   if (fields.eventDate !== undefined) {
     if (!isDateInFuture(fields.eventDate as string)) {
       return 'Event date must be in the future.'
@@ -137,7 +128,7 @@ orgEventsRouter.post('/', async (req: Request, res: Response): Promise<void> => 
   const body = req.body as Record<string, unknown>
 
   // Remove orgId from body — always use session value
-  const { orgId: _ignoredOrgId, ...fields } = body
+  const { orgId: _ignoredOrgId, ...fields } = body // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const validationError = validateEventFields(fields)
   if (validationError) {
@@ -286,7 +277,7 @@ orgEventsRouter.patch('/:eventId', async (req: Request, res: Response): Promise<
   const body = req.body as Record<string, unknown>
 
   // Remove orgId from body
-  const { orgId: _ignoredOrgId, ...fields } = body
+  const { orgId: _ignoredOrgId, ...fields } = body // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const event = await getItem(TABLE(), { PK: `EVENT#${eventId}`, SK: 'PROFILE' })
 

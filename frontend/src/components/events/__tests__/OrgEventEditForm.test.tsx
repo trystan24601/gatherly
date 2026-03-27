@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AuthProvider } from '../../../context/AuthContext'
+import type { EventDetail } from '../../../lib/events'
 
 // --------------------------------------------------------------------------
 // Module mocks
@@ -63,7 +64,7 @@ const ORG_ADMIN_USER = {
   orgStatus: 'APPROVED',
 }
 
-const DRAFT_EVENT = {
+const DRAFT_EVENT: EventDetail = {
   eventId: 'event-draft-1',
   orgId: 'org-demo-runners',
   title: 'Original Title',

@@ -217,7 +217,7 @@ describe('POST /organisation/events', () => {
     })
 
     it('returns 400 when title is missing', async () => {
-      const { title, ...payload } = VALID_CREATE_PAYLOAD
+      const { title: _t, ...payload } = VALID_CREATE_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
       const res = await request(app)
         .post('/organisation/events')
         .set('Cookie', 'sid=sess-org-admin')
@@ -227,7 +227,7 @@ describe('POST /organisation/events', () => {
     })
 
     it('returns 400 when eventTypeId is missing', async () => {
-      const { eventTypeId, ...payload } = VALID_CREATE_PAYLOAD
+      const { eventTypeId: _et, ...payload } = VALID_CREATE_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
       const res = await request(app)
         .post('/organisation/events')
         .set('Cookie', 'sid=sess-org-admin')
@@ -237,7 +237,7 @@ describe('POST /organisation/events', () => {
     })
 
     it('returns 400 when eventDate is missing', async () => {
-      const { eventDate, ...payload } = VALID_CREATE_PAYLOAD
+      const { eventDate: _ed, ...payload } = VALID_CREATE_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
       const res = await request(app)
         .post('/organisation/events')
         .set('Cookie', 'sid=sess-org-admin')
@@ -247,7 +247,7 @@ describe('POST /organisation/events', () => {
     })
 
     it('returns 400 when startTime is missing', async () => {
-      const { startTime, ...payload } = VALID_CREATE_PAYLOAD
+      const { startTime: _st, ...payload } = VALID_CREATE_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
       const res = await request(app)
         .post('/organisation/events')
         .set('Cookie', 'sid=sess-org-admin')
@@ -257,7 +257,7 @@ describe('POST /organisation/events', () => {
     })
 
     it('returns 400 when endTime is missing', async () => {
-      const { endTime, ...payload } = VALID_CREATE_PAYLOAD
+      const { endTime: _en, ...payload } = VALID_CREATE_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
       const res = await request(app)
         .post('/organisation/events')
         .set('Cookie', 'sid=sess-org-admin')
@@ -267,7 +267,7 @@ describe('POST /organisation/events', () => {
     })
 
     it('returns 400 when venueName is missing', async () => {
-      const { venueName, ...payload } = VALID_CREATE_PAYLOAD
+      const { venueName: _vn, ...payload } = VALID_CREATE_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
       const res = await request(app)
         .post('/organisation/events')
         .set('Cookie', 'sid=sess-org-admin')
@@ -277,7 +277,7 @@ describe('POST /organisation/events', () => {
     })
 
     it('returns 400 when venueAddress is missing', async () => {
-      const { venueAddress, ...payload } = VALID_CREATE_PAYLOAD
+      const { venueAddress: _va, ...payload } = VALID_CREATE_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
       const res = await request(app)
         .post('/organisation/events')
         .set('Cookie', 'sid=sess-org-admin')
@@ -287,7 +287,7 @@ describe('POST /organisation/events', () => {
     })
 
     it('returns 400 when city is missing', async () => {
-      const { city, ...payload } = VALID_CREATE_PAYLOAD
+      const { city: _cy, ...payload } = VALID_CREATE_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
       const res = await request(app)
         .post('/organisation/events')
         .set('Cookie', 'sid=sess-org-admin')
@@ -297,7 +297,7 @@ describe('POST /organisation/events', () => {
     })
 
     it('returns 400 when postcode is missing', async () => {
-      const { postcode, ...payload } = VALID_CREATE_PAYLOAD
+      const { postcode: _pc, ...payload } = VALID_CREATE_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
       const res = await request(app)
         .post('/organisation/events')
         .set('Cookie', 'sid=sess-org-admin')
@@ -377,7 +377,7 @@ describe('POST /organisation/events', () => {
 
   describe('auth & permission guards', () => {
     it('returns 401 when unauthenticated', async () => {
-      vi.mocked(getSession).mockResolvedValue(null)
+      vi.mocked(getSession).mockResolvedValue(undefined)
       const res = await request(app)
         .post('/organisation/events')
         .send(VALID_CREATE_PAYLOAD)
@@ -510,7 +510,7 @@ describe('PATCH /organisation/events/:eventId', () => {
 
   describe('auth & permission guards', () => {
     it('returns 401 when unauthenticated', async () => {
-      vi.mocked(getSession).mockResolvedValue(null)
+      vi.mocked(getSession).mockResolvedValue(undefined)
       const res = await request(app)
         .patch(`/organisation/events/${EVENT_ID}`)
         .send({ title: 'Updated' })
@@ -580,7 +580,7 @@ describe('GET /organisation/events/:eventId', () => {
     })
 
     it('returns 401 when unauthenticated', async () => {
-      vi.mocked(getSession).mockResolvedValue(null)
+      vi.mocked(getSession).mockResolvedValue(undefined)
       const res = await request(app).get(`/organisation/events/${EVENT_ID}`)
       expect(res.status).toBe(401)
     })
@@ -653,7 +653,7 @@ describe('GET /organisation/events', () => {
 
   describe('auth guards', () => {
     it('returns 401 when unauthenticated', async () => {
-      vi.mocked(getSession).mockResolvedValue(null)
+      vi.mocked(getSession).mockResolvedValue(undefined)
       const res = await request(app).get('/organisation/events')
       expect(res.status).toBe(401)
     })

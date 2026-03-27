@@ -84,7 +84,7 @@ export function OrgDashboardPage() {
       ) : events.length === 0 ? (
         // Empty state (AC-10)
         <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-500 mb-4">You haven't created any events yet.</p>
+          <p className="text-gray-500 mb-4">You haven&apos;t created any events yet.</p>
           <Link
             to="/organisation/events/new"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"

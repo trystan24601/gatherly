@@ -172,8 +172,9 @@ describe('<OrgEventCreateForm>', () => {
         venueAddress: '123 Street',
         city: 'London',
         postcode: 'SW1A 1AA',
-        status: 'DRAFT',
+        status: 'DRAFT' as const,
         createdAt: '2026-01-01T00:00:00.000Z',
+        roles: [],
       })
       await renderForm()
 
@@ -212,8 +213,9 @@ describe('<OrgEventCreateForm>', () => {
         venueAddress: '123 Street',
         city: 'London',
         postcode: 'SW1A 1AA',
-        status: 'DRAFT',
+        status: 'DRAFT' as const,
         createdAt: '2026-01-01T00:00:00.000Z',
+        roles: [],
       })
       await renderForm()
 
