@@ -27,6 +27,7 @@ const PENDING_REG_ID = 'reg-demo-pending'
 // Draft event used for publish E2E tests
 const DRAFT_EVENT_ID = 'event-demo-draft'
 const DRAFT_ROLE_ID = 'role-demo-draft-marshal'
+const DRAFT_SLOT_ID = 'slot-demo-draft-morning'
 
 // Pre-computed bcrypt hash (cost 12) for "TestPassword123!"
 // Generated with: bcrypt.hashSync('TestPassword123!', 12)
@@ -333,7 +334,9 @@ export async function seedData(): Promise<void> {
   await reset(tableName, {
     PK: `EVENT#${EVENT_ID}`,
     SK: `ROLE#${ROLE_ID_1}`,
+    entityType: 'ROLE',
     roleId: ROLE_ID_1,
+    orgId: ORG_ID,
     eventId: EVENT_ID,
     name: 'Marshal',
     capacity: 10,
@@ -344,7 +347,9 @@ export async function seedData(): Promise<void> {
   await reset(tableName, {
     PK: `EVENT#${EVENT_ID}`,
     SK: `ROLE#${ROLE_ID_2}`,
+    entityType: 'ROLE',
     roleId: ROLE_ID_2,
+    orgId: ORG_ID,
     eventId: EVENT_ID,
     name: 'Water Station',
     capacity: 5,
@@ -379,7 +384,9 @@ export async function seedData(): Promise<void> {
   await reset(tableName, {
     PK: `EVENT#${PUBLISHED_EVENT_ID}`,
     SK: `ROLE#${PUBLISHED_ROLE_ID}`,
+    entityType: 'ROLE',
     roleId: PUBLISHED_ROLE_ID,
+    orgId: ORG_ID,
     eventId: PUBLISHED_EVENT_ID,
     name: 'Marshal',
     capacity: 5,
@@ -427,11 +434,30 @@ export async function seedData(): Promise<void> {
   await reset(tableName, {
     PK: `EVENT#${DRAFT_EVENT_ID}`,
     SK: `ROLE#${DRAFT_ROLE_ID}`,
+    entityType: 'ROLE',
     roleId: DRAFT_ROLE_ID,
+    orgId: ORG_ID,
     eventId: DRAFT_EVENT_ID,
     name: 'Marshal',
     capacity: 8,
     filledCount: 0,
+  })
+
+  // 20. Slot for draft event role — unconditional reset
+  // Enables E2E publish tests (publish guard requires at least one role with one slot)
+  await reset(tableName, {
+    PK: `EVENT#${DRAFT_EVENT_ID}`,
+    SK: `ROLE#${DRAFT_ROLE_ID}#SLOT#${DRAFT_SLOT_ID}`,
+    entityType: 'SLOT',
+    slotId: DRAFT_SLOT_ID,
+    roleId: DRAFT_ROLE_ID,
+    orgId: ORG_ID,
+    eventId: DRAFT_EVENT_ID,
+    shiftStart: '09:00',
+    shiftEnd: '13:00',
+    headcount: 8,
+    filledCount: 0,
+    status: 'OPEN',
   })
 
   console.log('Seed data inserted successfully.')

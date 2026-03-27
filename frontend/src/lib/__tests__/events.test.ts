@@ -31,7 +31,8 @@ vi.mock('../../lib/api', () => ({
 // --------------------------------------------------------------------------
 
 import { apiClient } from '../../lib/api'
-import { createEvent, updateEvent, getEvent, listOrgEvents, publishEvent, cancelEvent } from '../events'
+import { createEvent, updateEvent, getEvent, listOrgEvents, publishEvent, cancelEvent, createRole, updateRole, deleteRole, createSlot, updateSlot, deleteSlot } from '../events'
+import type { EventRole, EventSlot } from '../events'
 
 const VALID_PAYLOAD = {
   title: 'Test Event',
@@ -145,5 +146,168 @@ describe('cancelEvent', () => {
 
     expect(apiClient.post).toHaveBeenCalledWith('/organisation/events/event-123/cancel', undefined)
     expect(result).toEqual(cancelledEvent)
+  })
+})
+
+// --------------------------------------------------------------------------
+// FE-TEST-01: Role and slot API client functions
+// --------------------------------------------------------------------------
+
+const ROLE_RESULT: EventRole = {
+  roleId: 'role-abc',
+  name: 'Marshal',
+  description: 'Keep runners on course',
+  skillIds: [],
+  slots: [],
+}
+
+const SLOT_RESULT: EventSlot = {
+  slotId: 'slot-abc',
+  roleId: 'role-abc',
+  shiftStart: '09:00',
+  shiftEnd: '13:00',
+  headcount: 5,
+  filledCount: 0,
+  status: 'OPEN',
+}
+
+describe('createRole', () => {
+  it('calls apiClient.post with /organisation/events/:eventId/roles and payload', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue(ROLE_RESULT)
+
+    const result = await createRole('event-123', { name: 'Marshal' })
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/organisation/events/event-123/roles',
+      { name: 'Marshal' }
+    )
+    expect(result).toEqual(ROLE_RESULT)
+  })
+})
+
+describe('updateRole', () => {
+  it('calls apiClient.patch with /organisation/events/:eventId/roles/:roleId and patch', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({ ...ROLE_RESULT, name: 'Updated Marshal' })
+
+    const result = await updateRole('event-123', 'role-abc', { name: 'Updated Marshal' })
+
+    expect(apiClient.patch).toHaveBeenCalledWith(
+      '/organisation/events/event-123/roles/role-abc',
+      { name: 'Updated Marshal' }
+    )
+    expect(result).toEqual({ ...ROLE_RESULT, name: 'Updated Marshal' })
+  })
+})
+
+describe('deleteRole', () => {
+  it('calls apiClient.delete with /organisation/events/:eventId/roles/:roleId', async () => {
+    vi.mocked(apiClient.delete).mockResolvedValue(undefined)
+
+    await deleteRole('event-123', 'role-abc')
+
+    expect(apiClient.delete).toHaveBeenCalledWith(
+      '/organisation/events/event-123/roles/role-abc'
+    )
+  })
+})
+
+describe('createSlot', () => {
+  it('calls apiClient.post with /organisation/events/:eventId/roles/:roleId/slots and payload', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue(SLOT_RESULT)
+
+    const result = await createSlot('event-123', 'role-abc', {
+      shiftStart: '09:00',
+      shiftEnd: '13:00',
+      headcount: 5,
+    })
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/organisation/events/event-123/roles/role-abc/slots',
+      { shiftStart: '09:00', shiftEnd: '13:00', headcount: 5 }
+    )
+    expect(result).toEqual(SLOT_RESULT)
+  })
+})
+
+describe('updateSlot', () => {
+  it('calls apiClient.patch with /organisation/events/:eventId/roles/:roleId/slots/:slotId and patch', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({ ...SLOT_RESULT, headcount: 10 })
+
+    const result = await updateSlot('event-123', 'role-abc', 'slot-abc', { headcount: 10 })
+
+    expect(apiClient.patch).toHaveBeenCalledWith(
+      '/organisation/events/event-123/roles/role-abc/slots/slot-abc',
+      { headcount: 10 }
+    )
+    expect(result).toEqual({ ...SLOT_RESULT, headcount: 10 })
+  })
+})
+
+describe('deleteSlot', () => {
+  it('calls apiClient.delete with /organisation/events/:eventId/roles/:roleId/slots/:slotId', async () => {
+    vi.mocked(apiClient.delete).mockResolvedValue(undefined)
+
+    await deleteSlot('event-123', 'role-abc', 'slot-abc')
+
+    expect(apiClient.delete).toHaveBeenCalledWith(
+      '/organisation/events/event-123/roles/role-abc/slots/slot-abc'
+    )
+  })
+})
+
+// --------------------------------------------------------------------------
+// FE-TEST-06: Type checks for EventSlot and EventRole
+// --------------------------------------------------------------------------
+
+describe('EventRole type includes slots field', () => {
+  it('EventRole has slots: EventSlot[] field', () => {
+    const role: EventRole = {
+      roleId: 'r1',
+      name: 'Marshal',
+      slots: [],
+    }
+    expect(role.slots).toEqual([])
+  })
+
+  it('EventRole can have optional description and skillIds', () => {
+    const role: EventRole = {
+      roleId: 'r1',
+      name: 'Marshal',
+      description: 'Keep runners safe',
+      skillIds: ['first-aid'],
+      slots: [],
+    }
+    expect(role.description).toBe('Keep runners safe')
+    expect(role.skillIds).toEqual(['first-aid'])
+  })
+})
+
+describe('EventSlot type has correct fields', () => {
+  it('EventSlot has required fields: slotId, roleId, shiftStart, shiftEnd, headcount, filledCount, status', () => {
+    const slot: EventSlot = {
+      slotId: 's1',
+      roleId: 'r1',
+      shiftStart: '09:00',
+      shiftEnd: '13:00',
+      headcount: 5,
+      filledCount: 0,
+      status: 'OPEN',
+    }
+    expect(slot.slotId).toBe('s1')
+    expect(slot.status).toBe('OPEN')
+  })
+
+  it('EventSlot has optional location field', () => {
+    const slot: EventSlot = {
+      slotId: 's1',
+      roleId: 'r1',
+      shiftStart: '09:00',
+      shiftEnd: '13:00',
+      headcount: 5,
+      filledCount: 0,
+      status: 'OPEN',
+      location: 'Start line',
+    }
+    expect(slot.location).toBe('Start line')
   })
 })
