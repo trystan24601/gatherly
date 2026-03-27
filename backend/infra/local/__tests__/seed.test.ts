@@ -180,15 +180,16 @@ describe('seed.ts — seedData', () => {
     expect(eventItems).toHaveLength(3)
   })
 
-  it('seedData inserts exactly 4 Role items (PK=EVENT#... SK=ROLE#...)', async () => {
+  it('seedData inserts exactly 5 Role/Slot items (PK=EVENT#... SK=ROLE#...)', async () => {
     const { seedData } = await import('../seed')
     await seedData()
 
     const roleItems = capturedPuts.filter(
       (p) => p.PK.startsWith('EVENT#') && p.SK.startsWith('ROLE#')
     )
-    // 2 roles for event-demo-fun-run, 1 for event-demo-published, 1 for event-demo-draft
-    expect(roleItems).toHaveLength(4)
+    // 2 roles for event-demo-fun-run, 1 for event-demo-published,
+    // 1 role + 1 slot for event-demo-draft
+    expect(roleItems).toHaveLength(5)
   })
 
   it('seedData inserts exactly 1 PENDING Registration item (PK=REG#... SK=META)', async () => {
@@ -228,7 +229,7 @@ describe('seed.ts — seedData', () => {
     expect(regItem?.Item.eventId).toBe('event-demo-published')
   })
 
-  it('seeded draft event for publish tests has status DRAFT with one role', async () => {
+  it('seeded draft event for publish tests has status DRAFT with one role and one slot', async () => {
     const { seedData } = await import('../seed')
     await seedData()
 
@@ -238,19 +239,26 @@ describe('seed.ts — seedData', () => {
     expect(eventItem?.Item.status).toBe('DRAFT')
 
     const roleItem = capturedPuts.find(
-      (p) => p.PK === 'EVENT#event-demo-draft' && p.SK.startsWith('ROLE#')
+      (p) => p.PK === 'EVENT#event-demo-draft' && p.SK.startsWith('ROLE#') && !p.SK.includes('#SLOT#')
     )
     expect(roleItem).toBeDefined()
+    expect(roleItem?.Item.entityType).toBe('ROLE')
+
+    const slotItem = capturedPuts.find(
+      (p) => p.PK === 'EVENT#event-demo-draft' && p.SK.includes('#SLOT#')
+    )
+    expect(slotItem).toBeDefined()
+    expect(slotItem?.Item.entityType).toBe('SLOT')
   })
 
-  it('seedData is idempotent — calling once produces 24 items and does not throw on second call', async () => {
+  it('seedData is idempotent — calling once produces 25 items and does not throw on second call', async () => {
     const { seedData } = await import('../seed')
     await seedData()
     // 3 Orgs + 3 OrgEmail sentinels
     // + 5 Users (volunteer, approved-admin, pending-admin, rejected-admin, super-admin)
     // + 5 UserEmail sentinels
-    // + 3 Events + 4 Roles + 1 Registration = 24 items
-    expect(capturedPuts).toHaveLength(24)
+    // + 3 Events + 4 Roles + 1 Slot (draft event) + 1 Registration = 25 items
+    expect(capturedPuts).toHaveLength(25)
     // Second call should not throw (conditional puts handle duplicates)
     await expect(seedData()).resolves.not.toThrow()
   })

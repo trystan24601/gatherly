@@ -5,20 +5,32 @@
  *
  * Displays:
  * - Event title, date/time, status badge, venue
- * - Roles list with fill bars
+ * - Roles list with nested slots (DRAFT only: add/edit/delete controls)
  * - Overall fill bar
  * - Lifecycle action section:
- *   - DRAFT: "Publish event" button (disabled if no roles)
+ *   - DRAFT: "Publish event" button (disabled if no role has at least one slot)
  *   - PUBLISHED: "Cancel event" button → opens CancelEventModal
  *   - CANCELLED / COMPLETED: read-only notice
  */
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getEvent, publishEvent } from '../lib/events'
-import type { EventDetail } from '../lib/events'
+import {
+  getEvent,
+  publishEvent,
+  deleteRole,
+  deleteSlot,
+  createRole,
+  updateRole,
+  createSlot,
+  updateSlot,
+} from '../lib/events'
+import type { EventDetail, EventRole, EventSlot, CreateRolePayload, CreateSlotPayload } from '../lib/events'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { FillBar } from '../components/ui/FillBar'
 import { CancelEventModal } from '../components/events/CancelEventModal'
+import { RoleCard } from '../components/events/RoleCard'
+import { AddEditRoleModal } from '../components/events/AddEditRoleModal'
+import { AddEditSlotModal } from '../components/events/AddEditSlotModal'
 
 export function OrgEventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -27,6 +39,15 @@ export function OrgEventDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [publishing, setPublishing] = useState(false)
+
+  // Role modal state
+  const [roleModalOpen, setRoleModalOpen] = useState(false)
+  const [editingRole, setEditingRole] = useState<EventRole | undefined>(undefined)
+
+  // Slot modal state
+  const [slotModalOpen, setSlotModalOpen] = useState(false)
+  const [slotModalRoleId, setSlotModalRoleId] = useState<string | undefined>(undefined)
+  const [editingSlot, setEditingSlot] = useState<EventSlot | undefined>(undefined)
 
   const fetchEvent = useCallback(async () => {
     if (!eventId) return
@@ -57,6 +78,69 @@ export function OrgEventDetailPage() {
     }
   }
 
+  // ---------- Role handlers ----------
+
+  function openAddRoleModal() {
+    setEditingRole(undefined)
+    setRoleModalOpen(true)
+  }
+
+  function openEditRoleModal(role: EventRole) {
+    setEditingRole(role)
+    setRoleModalOpen(true)
+  }
+
+  async function handleSaveRole(payload: CreateRolePayload) {
+    if (!eventId) return
+    if (editingRole) {
+      await updateRole(eventId, editingRole.roleId, payload)
+    } else {
+      await createRole(eventId, payload)
+    }
+    setRoleModalOpen(false)
+    setEditingRole(undefined)
+    await fetchEvent()
+  }
+
+  async function handleDeleteRole(roleId: string) {
+    if (!eventId) return
+    await deleteRole(eventId, roleId)
+    await fetchEvent()
+  }
+
+  // ---------- Slot handlers ----------
+
+  function openAddSlotModal(roleId: string) {
+    setSlotModalRoleId(roleId)
+    setEditingSlot(undefined)
+    setSlotModalOpen(true)
+  }
+
+  function openEditSlotModal(slot: EventSlot) {
+    setSlotModalRoleId(slot.roleId)
+    setEditingSlot(slot)
+    setSlotModalOpen(true)
+  }
+
+  async function handleSaveSlot(payload: CreateSlotPayload) {
+    if (!eventId || !slotModalRoleId) return
+    if (editingSlot) {
+      await updateSlot(eventId, slotModalRoleId, editingSlot.slotId, payload)
+    } else {
+      await createSlot(eventId, slotModalRoleId, payload)
+    }
+    setSlotModalOpen(false)
+    setEditingSlot(undefined)
+    setSlotModalRoleId(undefined)
+    await fetchEvent()
+  }
+
+  async function handleDeleteSlot(slotId: string, roleId: string) {
+    if (!eventId) return
+    await deleteSlot(eventId, roleId, slotId)
+    await fetchEvent()
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-surface-secondary flex items-center justify-center">
@@ -73,12 +157,29 @@ export function OrgEventDetailPage() {
     )
   }
 
-  const totalHeadcount = event.roles.reduce((sum, r) => sum + r.capacity, 0)
-  const totalFilled = event.roles.reduce((sum, r) => sum + r.filledCount, 0)
-  const hasRoles = event.roles.length > 0
+  const isDraft = event.status === 'DRAFT'
+
+  // Compute totals from slot-level data
+  const totalHeadcount = event.roles.reduce(
+    (sum, r) => sum + r.slots.reduce((s, slot) => s + slot.headcount, 0),
+    0
+  )
+  const totalFilled = event.roles.reduce(
+    (sum, r) => sum + r.slots.reduce((s, slot) => s + slot.filledCount, 0),
+    0
+  )
+
+  // Publish is enabled only when at least one role has at least one slot
+  const hasRoleWithSlot = event.roles.some((r) => r.slots.length > 0)
 
   // Map API status to StatusBadge status (lowercase)
   const badgeStatus = event.status.toLowerCase() as Parameters<typeof StatusBadge>[0]['status']
+
+  // Find role name for slot modal title
+  const slotModalRoleName =
+    slotModalRoleId
+      ? (event.roles.find((r) => r.roleId === slotModalRoleId)?.name ?? 'Role')
+      : 'Role'
 
   return (
     <div className="min-h-screen bg-surface-secondary">
@@ -117,29 +218,38 @@ export function OrgEventDetailPage() {
           </div>
         )}
 
-        {/* Roles list */}
+        {/* Roles section */}
         <div className="mb-8">
-          <h2 className="text-heading-sm font-bold text-text-primary mb-3">Roles</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-heading-sm font-bold text-text-primary">Roles</h2>
+            {isDraft && (
+              <button
+                type="button"
+                onClick={openAddRoleModal}
+                className="text-body-sm text-accent hover:underline font-medium"
+              >
+                + Add role
+              </button>
+            )}
+          </div>
+
           {event.roles.length === 0 ? (
             <p className="text-body-sm text-text-secondary">
-              No roles added yet. Publish requires at least one role.
+              No roles added yet. Add at least one role with a slot before publishing.
             </p>
           ) : (
             <ul className="space-y-3">
               {event.roles.map((role) => (
-                <li
-                  key={role.roleId}
-                  className="p-4 bg-white rounded-lg border border-border"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-body-sm font-medium text-text-primary">
-                      {role.name}
-                    </span>
-                    <span className="text-label-sm text-text-secondary">
-                      {role.filledCount} / {role.capacity}
-                    </span>
-                  </div>
-                  <FillBar filled={role.filledCount} total={role.capacity} />
+                <li key={role.roleId}>
+                  <RoleCard
+                    role={role}
+                    isDraft={isDraft}
+                    onEditRole={openEditRoleModal}
+                    onDeleteRole={handleDeleteRole}
+                    onAddSlot={openAddSlotModal}
+                    onEditSlot={openEditSlotModal}
+                    onDeleteSlot={(slotId) => handleDeleteSlot(slotId, role.roleId)}
+                  />
                 </li>
               ))}
             </ul>
@@ -148,20 +258,24 @@ export function OrgEventDetailPage() {
 
         {/* Lifecycle actions */}
         <div className="border-t border-border pt-6">
-          {event.status === 'DRAFT' && (
+          {isDraft && (
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={handlePublish}
-                disabled={!hasRoles || publishing}
-                title={!hasRoles ? 'Add at least one role before publishing.' : undefined}
+                disabled={!hasRoleWithSlot || publishing}
+                title={
+                  !hasRoleWithSlot
+                    ? 'Add at least one role with a slot before publishing.'
+                    : undefined
+                }
                 className="px-5 py-2.5 rounded-md text-body-sm font-medium bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {publishing ? 'Publishing...' : 'Publish event'}
               </button>
-              {!hasRoles && (
+              {!hasRoleWithSlot && (
                 <p className="text-label-sm text-text-secondary">
-                  Add at least one role before publishing.
+                  Add at least one role with a slot before publishing.
                 </p>
               )}
             </div>
@@ -194,6 +308,32 @@ export function OrgEventDetailPage() {
           registeredCount={event.pendingRegistrationCount ?? 0}
           eventId={event.eventId}
           onClose={() => setShowCancelModal(false)}
+        />
+      )}
+
+      {/* Add/Edit role modal */}
+      {roleModalOpen && (
+        <AddEditRoleModal
+          role={editingRole}
+          onSave={handleSaveRole}
+          onClose={() => {
+            setRoleModalOpen(false)
+            setEditingRole(undefined)
+          }}
+        />
+      )}
+
+      {/* Add/Edit slot modal */}
+      {slotModalOpen && slotModalRoleId && (
+        <AddEditSlotModal
+          roleName={slotModalRoleName}
+          slot={editingSlot}
+          onSave={handleSaveSlot}
+          onClose={() => {
+            setSlotModalOpen(false)
+            setEditingSlot(undefined)
+            setSlotModalRoleId(undefined)
+          }}
         />
       )}
     </div>

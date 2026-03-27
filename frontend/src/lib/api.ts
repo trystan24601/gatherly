@@ -32,6 +32,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new ApiError(response.status, body)
   }
 
+  // 204 No Content — return undefined rather than trying to parse an empty body
+  if (response.status === 204) {
+    return undefined as T
+  }
+
   return response.json() as Promise<T>
 }
 

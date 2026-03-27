@@ -21,12 +21,23 @@ export interface CreateEventPayload {
   maxVolunteers?: number
 }
 
+export interface EventSlot {
+  slotId: string
+  roleId: string
+  location?: string
+  shiftStart: string
+  shiftEnd: string
+  headcount: number
+  filledCount: number
+  status: 'OPEN' | 'FULL' | 'CLOSED'
+}
+
 export interface EventRole {
   roleId: string
-  eventId: string
   name: string
-  capacity: number
-  filledCount: number
+  description?: string
+  skillIds?: string[]
+  slots: EventSlot[]
 }
 
 export interface EventDetail {
@@ -105,4 +116,70 @@ export function publishEvent(eventId: string): Promise<EventDetail> {
 
 export function cancelEvent(eventId: string): Promise<EventDetail> {
   return apiClient.post<EventDetail>(`/organisation/events/${eventId}/cancel`, undefined)
+}
+
+// --------------------------------------------------------------------------
+// Role API functions
+// --------------------------------------------------------------------------
+
+export interface CreateRolePayload {
+  name: string
+  description?: string
+  skillIds?: string[]
+}
+
+export function createRole(eventId: string, payload: CreateRolePayload): Promise<EventRole> {
+  return apiClient.post<EventRole>(`/organisation/events/${eventId}/roles`, payload)
+}
+
+export function updateRole(
+  eventId: string,
+  roleId: string,
+  patch: Partial<CreateRolePayload>
+): Promise<EventRole> {
+  return apiClient.patch<EventRole>(`/organisation/events/${eventId}/roles/${roleId}`, patch)
+}
+
+export function deleteRole(eventId: string, roleId: string): Promise<void> {
+  return apiClient.delete<void>(`/organisation/events/${eventId}/roles/${roleId}`)
+}
+
+// --------------------------------------------------------------------------
+// Slot API functions
+// --------------------------------------------------------------------------
+
+export interface CreateSlotPayload {
+  shiftStart: string
+  shiftEnd: string
+  headcount: number
+  location?: string
+}
+
+export function createSlot(
+  eventId: string,
+  roleId: string,
+  payload: CreateSlotPayload
+): Promise<EventSlot> {
+  return apiClient.post<EventSlot>(
+    `/organisation/events/${eventId}/roles/${roleId}/slots`,
+    payload
+  )
+}
+
+export function updateSlot(
+  eventId: string,
+  roleId: string,
+  slotId: string,
+  patch: Partial<CreateSlotPayload>
+): Promise<EventSlot> {
+  return apiClient.patch<EventSlot>(
+    `/organisation/events/${eventId}/roles/${roleId}/slots/${slotId}`,
+    patch
+  )
+}
+
+export function deleteSlot(eventId: string, roleId: string, slotId: string): Promise<void> {
+  return apiClient.delete<void>(
+    `/organisation/events/${eventId}/roles/${roleId}/slots/${slotId}`
+  )
 }

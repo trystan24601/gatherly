@@ -29,3 +29,22 @@ export function isDateInFuture(dateStr: string): boolean {
 export function isEndTimeAfterStartTime(startTime: string, endTime: string): boolean {
   return endTime > startTime
 }
+
+/**
+ * Validates a shift time range (HH:MM format).
+ * Returns an error message string if invalid, or null if valid.
+ */
+export function validateTimeRange(shiftStart: unknown, shiftEnd: unknown): string | null {
+  const HH_MM = /^\d{2}:\d{2}$/
+
+  if (!shiftStart || !HH_MM.test(shiftStart as string)) {
+    return 'shiftStart is required and must be in HH:MM format.'
+  }
+  if (!shiftEnd || !HH_MM.test(shiftEnd as string)) {
+    return 'shiftEnd is required and must be in HH:MM format.'
+  }
+  if (!isEndTimeAfterStartTime(shiftStart as string, shiftEnd as string)) {
+    return 'shiftEnd must be after shiftStart.'
+  }
+  return null
+}

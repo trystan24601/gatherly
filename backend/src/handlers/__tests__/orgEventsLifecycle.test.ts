@@ -53,9 +53,10 @@ vi.mock('../../lib/rateLimiter', () => ({
 // --------------------------------------------------------------------------
 
 import { app } from '../../app'
-import { getItem, queryItems, updateItem, transactWrite } from '../../lib/dynamodb'
+import { getItem, queryItems, updateItem, transactWrite, putItem, deleteItem, queryItemsPaginated } from '../../lib/dynamodb'
 import { getSession, isSessionExpired } from '../../lib/session'
 import { enqueueEventCancelled } from '../../lib/eventMailer'
+import { isRateLimited, recordFailedAttempt } from '../../lib/rateLimiter'
 
 // --------------------------------------------------------------------------
 // Fixtures
@@ -148,11 +149,26 @@ const OTHER_ORG_EVENT = makeDraftEvent({ orgId: OTHER_ORG_ID, GSI4PK: `ORG#${OTH
 const ROLE_ITEM = {
   PK: `EVENT#${EVENT_ID}`,
   SK: 'ROLE#role-1',
+  entityType: 'ROLE',
   roleId: 'role-1',
   eventId: EVENT_ID,
   name: 'Marshal',
   capacity: 10,
   filledCount: 0,
+}
+
+const SLOT_ITEM = {
+  PK: `EVENT#${EVENT_ID}`,
+  SK: 'ROLE#role-1#SLOT#slot-1',
+  entityType: 'SLOT',
+  slotId: 'slot-1',
+  roleId: 'role-1',
+  eventId: EVENT_ID,
+  shiftStart: '09:00',
+  shiftEnd: '13:00',
+  headcount: 5,
+  filledCount: 0,
+  status: 'OPEN',
 }
 
 const PENDING_REG_ITEM = {
@@ -175,7 +191,20 @@ function mockSession(session: typeof ORG_ADMIN_SESSION | typeof VOLUNTEER_SESSIO
 
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  // Use resetAllMocks (not clearAllMocks) so that mockResolvedValueOnce queues
+  // are fully drained between tests, preventing mock contamination.
+  vi.resetAllMocks()
+  // Re-apply default implementations that the factory set (now cleared by reset).
+  vi.mocked(putItem).mockResolvedValue(undefined)
+  vi.mocked(updateItem).mockResolvedValue(undefined)
+  vi.mocked(deleteItem).mockResolvedValue(undefined)
+  vi.mocked(transactWrite).mockResolvedValue(undefined)
+  vi.mocked(queryItems).mockResolvedValue([])
+  vi.mocked(queryItemsPaginated).mockResolvedValue({ items: [], lastEvaluatedKey: undefined })
+  vi.mocked(isSessionExpired).mockReturnValue(false)
+  vi.mocked(isRateLimited).mockReturnValue(false)
+  vi.mocked(recordFailedAttempt).mockReturnValue(false)
+  vi.mocked(enqueueEventCancelled).mockResolvedValue(undefined)
   process.env.DYNAMODB_TABLE_NAME = 'test-table'
 })
 
@@ -185,7 +214,7 @@ beforeEach(() => {
 
 describe('POST /organisation/events/:eventId/publish', () => {
   describe('success', () => {
-    it('returns 200 with status=PUBLISHED and publishedAt when DRAFT event has at least one role', async () => {
+    it('returns 200 with status=PUBLISHED and publishedAt when DRAFT event has at least one role with at least one slot', async () => {
       mockSession(ORG_ADMIN_SESSION)
       const publishedEvent = { ...DRAFT_EVENT, status: 'PUBLISHED', publishedAt: '2026-05-01T00:00:00.000Z' }
       // getItem calls: requireApprovedOrg (ORG), handler (EVENT), handler re-fetch after update (EVENT)
@@ -193,7 +222,8 @@ describe('POST /organisation/events/:eventId/publish', () => {
         .mockResolvedValueOnce(APPROVED_ORG_ITEM)
         .mockResolvedValueOnce(DRAFT_EVENT)
         .mockResolvedValueOnce(publishedEvent)
-      vi.mocked(queryItems).mockResolvedValue([ROLE_ITEM])
+      // Publish guard requires at least one ROLE item and one SLOT item
+      vi.mocked(queryItems).mockResolvedValue([ROLE_ITEM, SLOT_ITEM])
 
       const res = await request(app)
         .post(`/organisation/events/${EVENT_ID}/publish`)
@@ -211,7 +241,7 @@ describe('POST /organisation/events/:eventId/publish', () => {
         .mockResolvedValueOnce(APPROVED_ORG_ITEM)
         .mockResolvedValueOnce(DRAFT_EVENT)
         .mockResolvedValueOnce(publishedEvent)
-      vi.mocked(queryItems).mockResolvedValue([ROLE_ITEM])
+      vi.mocked(queryItems).mockResolvedValue([ROLE_ITEM, SLOT_ITEM])
 
       await request(app)
         .post(`/organisation/events/${EVENT_ID}/publish`)
@@ -240,7 +270,7 @@ describe('POST /organisation/events/:eventId/publish', () => {
         .set('Cookie', 'sid=sess-org-admin')
 
       expect(res.status).toBe(400)
-      expect(res.body.error).toMatch(/at least one role/i)
+      expect(res.body.error).toBe('Event must have at least one role with at least one slot before publishing.')
     })
   })
 

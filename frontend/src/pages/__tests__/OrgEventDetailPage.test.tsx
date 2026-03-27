@@ -19,6 +19,12 @@ vi.mock('../../lib/events', () => ({
   createEvent: vi.fn(),
   updateEvent: vi.fn(),
   listOrgEvents: vi.fn(),
+  createRole: vi.fn(),
+  updateRole: vi.fn(),
+  deleteRole: vi.fn(),
+  createSlot: vi.fn(),
+  updateSlot: vi.fn(),
+  deleteSlot: vi.fn(),
 }))
 
 vi.mock('../../lib/api', () => ({
@@ -41,7 +47,7 @@ vi.mock('../../lib/api', () => ({
 // Imports (after mocks)
 // --------------------------------------------------------------------------
 
-import { getEvent, publishEvent } from '../../lib/events'
+import { getEvent, publishEvent, deleteRole } from '../../lib/events'
 import { OrgEventDetailPage } from '../../pages/OrgEventDetailPage'
 
 // --------------------------------------------------------------------------
@@ -68,10 +74,20 @@ function makeEvent(status: string, overrides: Record<string, unknown> = {}) {
     roles: [
       {
         roleId: 'role-1',
-        eventId: EVENT_ID,
         name: 'Marshal',
-        capacity: 10,
-        filledCount: 3,
+        description: 'Keep runners on course',
+        skillIds: [],
+        slots: [
+          {
+            slotId: 'slot-1',
+            roleId: 'role-1',
+            shiftStart: '09:00',
+            shiftEnd: '13:00',
+            headcount: 10,
+            filledCount: 3,
+            status: 'OPEN',
+          },
+        ],
       },
     ],
     pendingRegistrationCount: 1,
@@ -228,15 +244,88 @@ describe('OrgEventDetailPage', () => {
   })
 
   describe('roles list', () => {
-    it('renders each role with name and fill bar', async () => {
+    it('renders each role with name', async () => {
       vi.mocked(getEvent).mockResolvedValue(DRAFT_EVENT as any)
       renderPage()
 
       await waitFor(() => expect(screen.getByText('Demo Fun Run')).toBeInTheDocument())
 
       expect(screen.getByText('Marshal')).toBeInTheDocument()
-      // filledCount / capacity label — rendered as "3 / 10"
-      expect(screen.getByText('3 / 10')).toBeInTheDocument()
+    })
+
+    it('renders nested slots under each role', async () => {
+      vi.mocked(getEvent).mockResolvedValue(DRAFT_EVENT as any)
+      renderPage()
+
+      await waitFor(() => expect(screen.getByText('Demo Fun Run')).toBeInTheDocument())
+
+      // Slot shift times should appear
+      expect(screen.getByText(/09:00.+13:00/)).toBeInTheDocument()
+    })
+  })
+
+  describe('FE-TEST-05: role/slot management on DRAFT event', () => {
+    it('renders an "+ Add role" button when event is DRAFT', async () => {
+      vi.mocked(getEvent).mockResolvedValue(DRAFT_EVENT as any)
+      renderPage()
+
+      await waitFor(() => expect(screen.getByText('Demo Fun Run')).toBeInTheDocument())
+
+      expect(screen.getByRole('button', { name: /add role/i })).toBeInTheDocument()
+    })
+
+    it('calls deleteRole and re-fetches event when role Delete is clicked', async () => {
+      vi.mocked(getEvent)
+        .mockResolvedValueOnce(DRAFT_EVENT as any)
+        .mockResolvedValueOnce(DRAFT_EVENT as any)
+      vi.mocked(deleteRole).mockResolvedValue(undefined)
+
+      renderPage()
+      await waitFor(() => expect(screen.getByText('Demo Fun Run')).toBeInTheDocument())
+
+      const deleteRoleBtn = screen.getByRole('button', { name: /delete role/i })
+      await userEvent.click(deleteRoleBtn)
+
+      await waitFor(() => {
+        expect(deleteRole).toHaveBeenCalledWith(EVENT_ID, 'role-1')
+        expect(getEvent).toHaveBeenCalledTimes(2)
+      })
+    })
+
+    it('"Publish event" button is disabled when no role has any slot', async () => {
+      const draftEventNoSlots = {
+        ...DRAFT_EVENT,
+        roles: [{ roleId: 'role-1', name: 'Marshal', slots: [] }],
+      }
+      vi.mocked(getEvent).mockResolvedValue(draftEventNoSlots as any)
+      renderPage()
+
+      await waitFor(() => expect(screen.getByText('Demo Fun Run')).toBeInTheDocument())
+
+      const publishBtn = screen.getByRole('button', { name: /publish event/i })
+      expect(publishBtn).toBeDisabled()
+    })
+
+    it('"Publish event" button is enabled when at least one role has at least one slot', async () => {
+      vi.mocked(getEvent).mockResolvedValue(DRAFT_EVENT as any)
+      renderPage()
+
+      await waitFor(() => expect(screen.getByText('Demo Fun Run')).toBeInTheDocument())
+
+      const publishBtn = screen.getByRole('button', { name: /publish event/i })
+      expect(publishBtn).not.toBeDisabled()
+    })
+
+    it('role/slot management controls are hidden when event is not DRAFT', async () => {
+      vi.mocked(getEvent).mockResolvedValue(PUBLISHED_EVENT as any)
+      renderPage()
+
+      await waitFor(() => expect(screen.getByText('Demo Fun Run')).toBeInTheDocument())
+
+      expect(screen.queryByRole('button', { name: /add role/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /add slot/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /edit role/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /delete role/i })).not.toBeInTheDocument()
     })
   })
 })

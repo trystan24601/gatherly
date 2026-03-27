@@ -17,8 +17,8 @@ A DRAFT event is invisible to volunteers. The publish action is what makes an ev
 ### FR-01 — Publish Event
 
 `POST /organisation/events/:eventId/publish` (ORG_ADMIN, requireApprovedOrg):
-- Pre-condition: event must be DRAFT and have at least one role
-- Zero roles: `400 {"error":"An event must have at least one role before it can be published."}`
+- Pre-condition: event must be DRAFT and have at least one role with at least one slot
+- Zero roles, or roles with no slots: `400 {"error":"An event must have at least one role with at least one slot before it can be published."}`
 - Not DRAFT: `409 {"error":"Only DRAFT events can be published."}`
 - On success:
   - Sets `status=PUBLISHED`, `publishedAt=now()`
@@ -57,8 +57,8 @@ All API endpoints that modify event data (add role, edit event, etc.) check even
 ### FR-05 — Event Status Propagation
 
 When an event is cancelled:
-- All PENDING registrations for all roles on the event are set to `CANCELLED`
-- No `filledCount` changes (cancelled registrations don't decrement — event is gone)
+- All PENDING registrations for all slots on the event are set to `CANCELLED` (each registration record carries a `slotId` referencing the slot it was made against)
+- No `filledCount` changes on any slot (cancelled registrations don't decrement — event is gone)
 - Volunteers are notified via SQS-triggered SES email (visible in Mailhog locally)
 
 ---
@@ -92,10 +92,10 @@ When an event is cancelled:
 ├─────────────────────────────────────────┤
 │  Roles (2)              Fill: 3/8 (38%) │
 │─────────────────────────────────────────│
-│  Water Station Marshal   08:00–12:00    │
-│  2/5 filled                             │
-│  Finish Line Marshal     12:00–16:00    │
-│  1/3 filled                             │
+│  Water Station Marshal                  │
+│    Station A · 08:00–12:00 · 2/5 filled │
+│  Finish Line Marshal                    │
+│    Finish Line · 12:00–16:00 · 1/3 filled│
 ├─────────────────────────────────────────┤
 │  ┌──────────────────────────────────┐   │
 │  │   ⚠ Cancel event                │   │
@@ -123,14 +123,14 @@ When an event is cancelled:
 
 | ID | Criterion |
 |---|---|
-| AC-01 | DRAFT event with at least one role can be published; `status=PUBLISHED` in DynamoDB |
-| AC-02 | Attempting to publish a DRAFT event with zero roles returns `400` |
+| AC-01 | DRAFT event with at least one role containing at least one slot can be published; `status=PUBLISHED` in DynamoDB |
+| AC-02 | Attempting to publish a DRAFT event with zero roles, or roles that have no slots, returns `400` |
 | AC-03 | Published event appears in volunteer discovery feed |
 | AC-04 | PUBLISHED event can be cancelled; `status=CANCELLED` in DynamoDB |
 | AC-05 | DRAFT event cancellation returns `409` |
 | AC-06 | COMPLETED event cancellation returns `409` |
 | AC-07 | Cancellation enqueues `EVENT_CANCELLED` SQS message |
-| AC-08 | All PENDING registrations for a cancelled event are set to `CANCELLED` |
+| AC-08 | All PENDING registrations (each carrying a `slotId`) for a cancelled event are set to `CANCELLED` |
 | AC-09 | COMPLETED event is no longer visible in the discovery feed |
 
 ---
