@@ -3,6 +3,9 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import { healthHandler } from './handlers/health'
 import { authRouter } from './handlers/auth'
+import { organisationsRouter } from './handlers/organisations'
+import { adminOrgsRouter } from './handlers/admin-organisations'
+import { requireAuth, requireRole } from './middleware/auth.middleware'
 
 export const app = express()
 
@@ -35,3 +38,9 @@ app.get('/health', healthHandler)
 
 // Authentication routes
 app.use('/auth', authRouter)
+
+// Organisation registration (public)
+app.use('/organisations', organisationsRouter)
+
+// Admin organisation management (requires SUPER_ADMIN)
+app.use('/admin/organisations', requireAuth, requireRole('SUPER_ADMIN'), adminOrgsRouter)

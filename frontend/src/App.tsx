@@ -7,6 +7,12 @@ import { OrgLoginForm } from './components/auth/OrgLoginForm'
 import { AdminLoginForm } from './components/auth/AdminLoginForm'
 import { ForgotPasswordForm } from './components/auth/ForgotPasswordForm'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { OrgRegisterForm } from './components/organisations/OrgRegisterForm'
+import { OrgRegisterSubmittedPage } from './pages/OrgRegisterSubmittedPage'
+import { OrgPendingPage } from './pages/OrgPendingPage'
+import { OrgRejectedPage } from './pages/OrgRejectedPage'
+import { AdminOrgListPage } from './pages/AdminOrgListPage'
+import { AdminOrgDetailPage } from './pages/AdminOrgDetailPage'
 
 // Placeholder dashboard pages (to be replaced by feature PRDs)
 function Dashboard() {
@@ -36,6 +42,10 @@ export function App() {
           <Route path="/admin/login" element={<AdminLoginForm />} />
           <Route path="/forgot-password" element={<ForgotPasswordForm />} />
 
+          {/* Organisation registration (public) */}
+          <Route path="/register/organisation" element={<OrgRegisterForm />} />
+          <Route path="/register/organisation/submitted" element={<OrgRegisterSubmittedPage />} />
+
           {/* Protected routes */}
           <Route
             path="/dashboard"
@@ -58,6 +68,50 @@ export function App() {
             element={
               <ProtectedRoute role="SUPER_ADMIN">
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Org Admin status pages (exempt from org-status redirect) */}
+          <Route
+            path="/organisation/pending"
+            element={
+              <ProtectedRoute role="ORG_ADMIN">
+                <OrgPendingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organisation/rejected"
+            element={
+              <ProtectedRoute role="ORG_ADMIN">
+                <OrgRejectedPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organisation/dashboard"
+            element={
+              <ProtectedRoute role="ORG_ADMIN">
+                <OrgDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Super Admin org management */}
+          <Route
+            path="/admin/organisations"
+            element={
+              <ProtectedRoute role="SUPER_ADMIN">
+                <AdminOrgListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/organisations/:orgId"
+            element={
+              <ProtectedRoute role="SUPER_ADMIN">
+                <AdminOrgDetailPage />
               </ProtectedRoute>
             }
           />

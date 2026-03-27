@@ -7,9 +7,16 @@ const TABLE_NAME = () => {
 }
 
 const ORG_ID = 'org-demo-runners'
+const PENDING_ORG_ID = 'org-seed-pending'
+const REJECTED_ORG_ID = 'org-seed-rejected'
 const USER_ID = 'user-demo-volunteer'
 const ADMIN_USER_ID = 'user-demo-admin'
+const PENDING_ORG_ADMIN_USER_ID = 'user-seed-pending-admin'
+const REJECTED_ORG_ADMIN_USER_ID = 'user-seed-rejected-admin'
+const SUPER_ADMIN_USER_ID = 'user-seed-super-admin'
 const ORG_EMAIL = 'hello@gatherly-demo.com'
+const PENDING_ORG_EMAIL = 'admin@pending-org.com'
+const REJECTED_ORG_EMAIL = 'admin@rejected-org.com'
 const EVENT_ID = 'event-demo-fun-run'
 const ROLE_ID_1 = 'role-marshal'
 const ROLE_ID_2 = 'role-water-station'
@@ -42,7 +49,7 @@ async function upsert(
 export async function seedData(): Promise<void> {
   const tableName = TABLE_NAME()
 
-  // 1. Organisation item — ORG# / PROFILE
+  // 1. Approved Organisation item — ORG# / PROFILE
   await upsert(
     tableName,
     {
@@ -52,14 +59,15 @@ export async function seedData(): Promise<void> {
       name: 'Gatherly Demo Runners',
       status: 'APPROVED',
       contactEmail: ORG_EMAIL,
+      submittedAt: '2026-01-01T00:00:00.000Z',
       createdAt: '2026-01-01T00:00:00.000Z',
-      GSI1PK: 'ORG_APPROVAL',
-      GSI1SK: `APPROVED#2026-01-01T00:00:00.000Z`,
+      GSI1PK: 'ORG_STATUS#APPROVED',
+      GSI1SK: `2026-01-01T00:00:00.000Z#${ORG_ID}`,
     },
     'attribute_not_exists(PK)'
   )
 
-  // 2. OrgEmail sentinel — ORGEMAIL# / LOCK
+  // 2. Approved OrgEmail sentinel — ORGEMAIL# / LOCK
   await upsert(
     tableName,
     {
@@ -70,7 +78,72 @@ export async function seedData(): Promise<void> {
     'attribute_not_exists(PK)'
   )
 
-  // 3. Volunteer user item — USER# / PROFILE
+  // 3. Pending Organisation item — ORG# / PROFILE
+  await upsert(
+    tableName,
+    {
+      PK: `ORG#${PENDING_ORG_ID}`,
+      SK: 'PROFILE',
+      orgId: PENDING_ORG_ID,
+      name: 'Pending Community Group',
+      orgType: 'COMMUNITY',
+      description: 'A community group for testing the organisation registration flow and approval queue.',
+      contactEmail: PENDING_ORG_EMAIL,
+      contactPhone: '+447700900001',
+      status: 'PENDING',
+      submittedAt: '2026-02-01T00:00:00.000Z',
+      createdAt: '2026-02-01T00:00:00.000Z',
+      GSI1PK: 'ORG_STATUS#PENDING',
+      GSI1SK: `2026-02-01T00:00:00.000Z#${PENDING_ORG_ID}`,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 4. Pending OrgEmail sentinel — ORGEMAIL# / LOCK
+  await upsert(
+    tableName,
+    {
+      PK: `ORGEMAIL#${PENDING_ORG_EMAIL}`,
+      SK: 'LOCK',
+      orgId: PENDING_ORG_ID,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 5. Rejected Organisation item — ORG# / PROFILE
+  await upsert(
+    tableName,
+    {
+      PK: `ORG#${REJECTED_ORG_ID}`,
+      SK: 'PROFILE',
+      orgId: REJECTED_ORG_ID,
+      name: 'Rejected Demo Org',
+      orgType: 'SPORTS_CLUB',
+      description: 'A sports club whose registration was rejected.',
+      contactEmail: REJECTED_ORG_EMAIL,
+      contactPhone: '+447700900002',
+      status: 'REJECTED',
+      submittedAt: '2026-01-15T00:00:00.000Z',
+      rejectionReason: 'The organisation details provided were incomplete and could not be verified.',
+      createdAt: '2026-01-15T00:00:00.000Z',
+      GSI1PK: 'ORG_STATUS#REJECTED',
+      GSI1SK: `2026-01-15T00:00:00.000Z#${REJECTED_ORG_ID}`,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 6. Rejected OrgEmail sentinel — ORGEMAIL# / LOCK
+  await upsert(
+    tableName,
+    {
+      PK: `ORGEMAIL#${REJECTED_ORG_EMAIL}`,
+      SK: 'LOCK',
+      orgId: REJECTED_ORG_ID,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 7. Volunteer user item — USER# / PROFILE
   await upsert(
     tableName,
     {
@@ -89,7 +162,7 @@ export async function seedData(): Promise<void> {
     'attribute_not_exists(PK)'
   )
 
-  // 3b. Volunteer USEREMAIL sentinel — USEREMAIL# / LOCK
+  // 7b. Volunteer USEREMAIL sentinel — USEREMAIL# / LOCK
   await upsert(
     tableName,
     {
@@ -100,7 +173,7 @@ export async function seedData(): Promise<void> {
     'attribute_not_exists(PK)'
   )
 
-  // 3c. Org Admin user item — USER# / PROFILE
+  // 8. Approved Org Admin user item — USER# / PROFILE
   await upsert(
     tableName,
     {
@@ -120,7 +193,7 @@ export async function seedData(): Promise<void> {
     'attribute_not_exists(PK)'
   )
 
-  // 3d. Org Admin USEREMAIL sentinel — USEREMAIL# / LOCK
+  // 8b. Approved Org Admin USEREMAIL sentinel — USEREMAIL# / LOCK
   await upsert(
     tableName,
     {
@@ -131,7 +204,97 @@ export async function seedData(): Promise<void> {
     'attribute_not_exists(PK)'
   )
 
-  // 4. Event item — EVENT# / PROFILE
+  // 9. Pending Org Admin user item — USER# / PROFILE
+  await upsert(
+    tableName,
+    {
+      PK: `USER#${PENDING_ORG_ADMIN_USER_ID}`,
+      SK: 'PROFILE',
+      userId: PENDING_ORG_ADMIN_USER_ID,
+      email: PENDING_ORG_EMAIL,
+      firstName: 'Pending',
+      lastName: 'OrgAdmin',
+      role: 'ORG_ADMIN',
+      orgId: PENDING_ORG_ID,
+      passwordHash: TEST_PASSWORD_HASH,
+      createdAt: '2026-02-01T00:00:00.000Z',
+      GSI2PK: `ORG#${PENDING_ORG_ID}`,
+      GSI2SK: `USER#${PENDING_ORG_ADMIN_USER_ID}`,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 9b. Pending Org Admin USEREMAIL sentinel — USEREMAIL# / LOCK
+  await upsert(
+    tableName,
+    {
+      PK: `USEREMAIL#${PENDING_ORG_EMAIL}`,
+      SK: 'LOCK',
+      userId: PENDING_ORG_ADMIN_USER_ID,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 10. Rejected Org Admin user item — USER# / PROFILE
+  await upsert(
+    tableName,
+    {
+      PK: `USER#${REJECTED_ORG_ADMIN_USER_ID}`,
+      SK: 'PROFILE',
+      userId: REJECTED_ORG_ADMIN_USER_ID,
+      email: REJECTED_ORG_EMAIL,
+      firstName: 'Rejected',
+      lastName: 'OrgAdmin',
+      role: 'ORG_ADMIN',
+      orgId: REJECTED_ORG_ID,
+      passwordHash: TEST_PASSWORD_HASH,
+      createdAt: '2026-01-15T00:00:00.000Z',
+      GSI2PK: `ORG#${REJECTED_ORG_ID}`,
+      GSI2SK: `USER#${REJECTED_ORG_ADMIN_USER_ID}`,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 10b. Rejected Org Admin USEREMAIL sentinel — USEREMAIL# / LOCK
+  await upsert(
+    tableName,
+    {
+      PK: `USEREMAIL#${REJECTED_ORG_EMAIL}`,
+      SK: 'LOCK',
+      userId: REJECTED_ORG_ADMIN_USER_ID,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 11. Super Admin user item — USER# / PROFILE
+  await upsert(
+    tableName,
+    {
+      PK: `USER#${SUPER_ADMIN_USER_ID}`,
+      SK: 'PROFILE',
+      userId: SUPER_ADMIN_USER_ID,
+      email: 'superadmin@gatherlywork.com',
+      firstName: 'Super',
+      lastName: 'Admin',
+      role: 'SUPER_ADMIN',
+      passwordHash: TEST_PASSWORD_HASH,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 11b. Super Admin USEREMAIL sentinel — USEREMAIL# / LOCK
+  await upsert(
+    tableName,
+    {
+      PK: 'USEREMAIL#superadmin@gatherlywork.com',
+      SK: 'LOCK',
+      userId: SUPER_ADMIN_USER_ID,
+    },
+    'attribute_not_exists(PK)'
+  )
+
+  // 12. Event item — EVENT# / PROFILE
   await upsert(
     tableName,
     {
@@ -149,7 +312,7 @@ export async function seedData(): Promise<void> {
     'attribute_not_exists(PK)'
   )
 
-  // 5. Role 1 — EVENT# / ROLE#
+  // 13. Role 1 — EVENT# / ROLE#
   await upsert(
     tableName,
     {
@@ -164,7 +327,7 @@ export async function seedData(): Promise<void> {
     'attribute_not_exists(SK)'
   )
 
-  // 6. Role 2 — EVENT# / ROLE#
+  // 14. Role 2 — EVENT# / ROLE#
   await upsert(
     tableName,
     {

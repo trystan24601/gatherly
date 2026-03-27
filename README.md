@@ -39,12 +39,15 @@ Services:
 
 ### Seeded Accounts
 
-| Role | Email | Password |
-|---|---|---|
-| Volunteer | volunteer@example.com | `TestPassword123!` |
-| Org Admin | admin@gatherlydemohq.com | `TestPassword123!` |
+| Role | Email | Password | Notes |
+|---|---|---|---|
+| Volunteer | volunteer@example.com | `TestPassword123!` | |
+| Org Admin (approved) | admin@gatherlydemohq.com | `TestPassword123!` | Org: Gatherly Demo Runners |
+| Org Admin (pending) | admin@pending-org.com | `TestPassword123!` | Org awaiting super admin approval |
+| Org Admin (rejected) | admin@rejected-org.com | `TestPassword123!` | Org rejected with reason |
+| Super Admin | superadmin@gatherlywork.com | `TestPassword123!` | Can approve/reject orgs at `/admin/organisations` |
 
-Seed data includes: 1 approved organisation (Gatherly Demo Runners), 1 published event with 2 roles, both users with hashed passwords ready for login.
+Seed data includes: 3 organisations (approved, pending, rejected), 1 published event with 2 roles, 5 users across all roles.
 
 ## Environment Variables
 
