@@ -73,7 +73,7 @@ const PENDING_ORGS_PAGE_2 = {
 }
 
 async function renderPage() {
-  ;(apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(SUPER_ADMIN_USER)
+  (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(SUPER_ADMIN_USER)
   const { AdminOrgListPage } = await import('../../../pages/AdminOrgListPage')
   return render(
     <MemoryRouter initialEntries={['/admin/organisations']}>

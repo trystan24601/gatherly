@@ -43,7 +43,7 @@ async function getComponent() {
 
 function renderWithProviders(ui: React.ReactElement) {
   // Mock GET /auth/me as 401 (unauthenticated user filling in the form)
-  ;(apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('401'))
+  (apiClient.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('401'))
   return render(
     <MemoryRouter initialEntries={['/register/organisation']}>
       <AuthProvider>{ui}</AuthProvider>

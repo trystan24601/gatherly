@@ -39,7 +39,7 @@ const PENDING_USER = {
 }
 
 async function renderPage() {
-  ;(apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(PENDING_USER)
+  (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(PENDING_USER)
   ;(apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({})
 
   const { OrgPendingPage } = await import('../../../pages/OrgPendingPage')
@@ -77,7 +77,7 @@ describe('<OrgPendingPage>', () => {
   })
 
   it('calls logout when Sign out button is clicked', async () => {
-    ;(apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    (apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({})
     await renderPage()
 
     const signOutBtn = await screen.findByRole('button', { name: /sign out/i })

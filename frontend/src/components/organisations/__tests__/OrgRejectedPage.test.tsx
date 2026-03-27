@@ -39,7 +39,7 @@ const REJECTED_USER = {
 }
 
 async function renderPage() {
-  ;(apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(REJECTED_USER)
+  (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValue(REJECTED_USER)
   ;(apiClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({})
 
   const { OrgRejectedPage } = await import('../../../pages/OrgRejectedPage')

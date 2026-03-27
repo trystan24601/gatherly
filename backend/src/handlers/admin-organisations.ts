@@ -213,15 +213,6 @@ adminOrgsRouter.post('/:orgId/reject', async (req: Request, res: Response): Prom
 // --------------------------------------------------------------------------
 
 function stripInternalKeys(item: Record<string, unknown>): Record<string, unknown> {
-  const {
-    PK: _pk,
-    SK: _sk,
-    GSI1PK: _g1pk,
-    GSI1SK: _g1sk,
-    GSI2PK: _g2pk,
-    GSI2SK: _g2sk,
-    passwordHash: _ph,
-    ...safe
-  } = item // eslint-disable-line @typescript-eslint/no-unused-vars
+  const { PK: _pk, SK: _sk, GSI1PK: _g1pk, GSI1SK: _g1sk, GSI2PK: _g2pk, GSI2SK: _g2sk, passwordHash: _ph, ...safe } = item // eslint-disable-line @typescript-eslint/no-unused-vars
   return safe
 }

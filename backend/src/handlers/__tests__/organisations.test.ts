@@ -291,7 +291,7 @@ describe('POST /organisations/register', () => {
   })
 
   it('returns 201 when website is omitted (optional field)', async () => {
-    const { website: _w, ...payloadWithoutWebsite } = VALID_PAYLOAD
+    const { website: _w, ...payloadWithoutWebsite } = VALID_PAYLOAD // eslint-disable-line @typescript-eslint/no-unused-vars
     const res = await request(app).post('/organisations/register').send(payloadWithoutWebsite)
 
     expect(res.status).toBe(201)
@@ -303,7 +303,7 @@ describe('POST /organisations/register', () => {
 
   it('returns 409 with adminEmail conflict message when USEREMAIL sentinel exists', async () => {
     // Pre-check GetItem returns a sentinel → admin email already registered
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       PK: 'USEREMAIL#alice@sunrise-runners.co.uk',
       SK: 'LOCK',
       userId: 'some-existing-user',
@@ -317,7 +317,7 @@ describe('POST /organisations/register', () => {
 
   it('returns 409 with org email conflict message when TransactWrite fails on ORGEMAIL condition', async () => {
     // USEREMAIL pre-check passes (no existing user)
-    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
+    (getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined)
     // TransactWrite throws TransactionCanceledException
     const txError = new Error('Transaction cancelled')
     txError.name = 'TransactionCanceledException'

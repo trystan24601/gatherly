@@ -97,17 +97,17 @@ const PENDING_ORG = {
 
 /** Helper to set up SUPER_ADMIN session cookie via mock */
 function mockSuperAdminSession() {
-  ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValue(SUPER_ADMIN_SESSION)
+  (getSession as ReturnType<typeof vi.fn>).mockResolvedValue(SUPER_ADMIN_SESSION)
   ;(isSessionExpired as ReturnType<typeof vi.fn>).mockReturnValue(false)
 }
 
 function mockOrgAdminSession() {
-  ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValue(ORG_ADMIN_SESSION)
+  (getSession as ReturnType<typeof vi.fn>).mockResolvedValue(ORG_ADMIN_SESSION)
   ;(isSessionExpired as ReturnType<typeof vi.fn>).mockReturnValue(false)
 }
 
 function mockVolunteerSession() {
-  ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValue(VOLUNTEER_SESSION)
+  (getSession as ReturnType<typeof vi.fn>).mockResolvedValue(VOLUNTEER_SESSION)
   ;(isSessionExpired as ReturnType<typeof vi.fn>).mockReturnValue(false)
 }
 
@@ -122,7 +122,7 @@ beforeEach(() => {
 
 describe('GET /admin/organisations', () => {
   it('returns 401 when unauthenticated', async () => {
-    ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
 
     const res = await request(app)
       .get('/admin/organisations')
@@ -245,7 +245,7 @@ describe('GET /admin/organisations/:orgId', () => {
 
 describe('POST /admin/organisations/:orgId/approve', () => {
   it('returns 401 when unauthenticated', async () => {
-    ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
 
     const res = await request(app)
       .post('/admin/organisations/org-pending-1/approve')
