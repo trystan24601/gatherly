@@ -97,6 +97,10 @@ module.exports = {
           'published-bg':       'var(--badge-published-bg)',
           'published-border':   'var(--badge-published-border)',
           'published-text':     'var(--badge-published-text)',
+
+          'filled-bg':     'var(--badge-filled-bg)',
+          'filled-border': 'var(--badge-filled-border)',
+          'filled-text':   'var(--badge-filled-text)',
         },
       },
 

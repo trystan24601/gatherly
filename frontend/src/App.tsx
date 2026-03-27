@@ -7,11 +7,12 @@ import { OrgLoginForm } from './components/auth/OrgLoginForm'
 import { AdminLoginForm } from './components/auth/AdminLoginForm'
 import { ForgotPasswordForm } from './components/auth/ForgotPasswordForm'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
-
-// Placeholder dashboard pages (to be replaced by feature PRDs)
-function Dashboard() {
-  return <div>Volunteer Dashboard — placeholder</div>
-}
+import { LandingScreen } from './screens/LandingScreen'
+import { DiscoveryFeedScreen } from './screens/DiscoveryFeedScreen'
+import { EventDetailScreen } from './screens/EventDetailScreen'
+import { VolunteerDashboardScreen } from './screens/VolunteerDashboardScreen'
+import { OrganiserEventDashboardScreen } from './screens/OrganiserEventDashboardScreen'
+import { OrganiserRegistrationReviewScreen } from './screens/OrganiserRegistrationReviewScreen'
 
 function OrgDashboard() {
   return <div>Org Admin Dashboard — placeholder</div>
@@ -41,7 +42,7 @@ export function App() {
             path="/dashboard"
             element={
               <ProtectedRoute role="VOLUNTEER">
-                <Dashboard />
+                <VolunteerDashboardScreen />
               </ProtectedRoute>
             }
           />
@@ -61,6 +62,13 @@ export function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Demo screens */}
+          <Route path="/demo" element={<LandingScreen />} />
+          <Route path="/demo/events" element={<DiscoveryFeedScreen />} />
+          <Route path="/demo/events/:id" element={<EventDetailScreen />} />
+          <Route path="/demo/organiser/events/:id" element={<OrganiserEventDashboardScreen />} />
+          <Route path="/demo/organiser/events/:id/registrations" element={<OrganiserRegistrationReviewScreen />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
