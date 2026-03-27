@@ -6,6 +6,7 @@ import { authRouter } from './handlers/auth'
 import { organisationsRouter } from './handlers/organisations'
 import { adminOrgsRouter } from './handlers/admin-organisations'
 import { requireAuth, requireRole } from './middleware/auth.middleware'
+import { resetLimiter } from './lib/rateLimiter'
 
 export const app = express()
 
@@ -44,3 +45,11 @@ app.use('/organisations', organisationsRouter)
 
 // Admin organisation management (requires SUPER_ADMIN)
 app.use('/admin/organisations', requireAuth, requireRole('SUPER_ADMIN'), adminOrgsRouter)
+
+// Test-only: reset in-memory rate limiter (non-production only)
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/test/reset-rate-limiter', (_req, res) => {
+    resetLimiter()
+    res.status(204).send()
+  })
+}

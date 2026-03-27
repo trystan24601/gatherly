@@ -256,6 +256,13 @@ test.describe('TST-05: Password reset flow', () => {
 // TST-06: Rate limiting (AC-11)
 // --------------------------------------------------------------------------
 test.describe('TST-06: Rate limiting', () => {
+  test.afterAll(async () => {
+    // Reset the in-memory rate limiter so subsequent test files are not blocked.
+    const ctx = await apiRequest.newContext({ baseURL: apiURL })
+    await ctx.post('/test/reset-rate-limiter')
+    await ctx.dispose()
+  })
+
   test('blocks login after 5 failed attempts (returns 429)', async () => {
     // Use a random email that does not exist so all attempts fail
     const email = `ratelimit-${Date.now()}@test.example.com`
