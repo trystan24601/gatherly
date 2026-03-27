@@ -16,6 +16,7 @@ import { AdminOrgDetailPage } from './pages/AdminOrgDetailPage'
 import { OrgDashboardPage } from './pages/OrgDashboardPage'
 import { OrgEventCreatePage } from './pages/OrgEventCreatePage'
 import { OrgEventEditPage } from './pages/OrgEventEditPage'
+import { OrgEventDetailPage } from './pages/OrgEventDetailPage'
 import { LandingScreen } from './screens/LandingScreen'
 import { DiscoveryFeedScreen } from './screens/DiscoveryFeedScreen'
 import { EventDetailScreen } from './screens/EventDetailScreen'
@@ -104,6 +105,14 @@ export function App() {
             element={
               <ProtectedRoute role="ORG_ADMIN">
                 <OrgEventCreatePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organisation/events/:eventId"
+            element={
+              <ProtectedRoute role="ORG_ADMIN">
+                <OrgEventDetailPage />
               </ProtectedRoute>
             }
           />

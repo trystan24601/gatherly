@@ -43,16 +43,20 @@ export interface EventDetail {
   postcode: string
   description?: string
   maxVolunteers?: number
-  status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED'
+  status: 'DRAFT' | 'PUBLISHED' | 'ACTIVE' | 'CANCELLED' | 'COMPLETED'
   createdAt: string
+  publishedAt?: string
+  cancelledAt?: string
+  completedAt?: string
   roles: EventRole[]
+  pendingRegistrationCount?: number
 }
 
 export interface EventSummary {
   eventId: string
   title: string
   eventDate: string
-  status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED'
+  status: 'DRAFT' | 'PUBLISHED' | 'ACTIVE' | 'CANCELLED' | 'COMPLETED'
   totalRoles: number
   totalHeadcount: number
   filledCount: number
@@ -93,4 +97,12 @@ export function listOrgEvents(params?: ListOrgEventsParams): Promise<EventListRe
   const searchParams = new URLSearchParams({ limit: String(limit) })
   if (params?.cursor) searchParams.set('cursor', params.cursor)
   return apiClient.get<EventListResponse>(`/organisation/events?${searchParams.toString()}`)
+}
+
+export function publishEvent(eventId: string): Promise<EventDetail> {
+  return apiClient.post<EventDetail>(`/organisation/events/${eventId}/publish`, undefined)
+}
+
+export function cancelEvent(eventId: string): Promise<EventDetail> {
+  return apiClient.post<EventDetail>(`/organisation/events/${eventId}/cancel`, undefined)
 }

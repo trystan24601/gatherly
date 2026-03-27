@@ -31,7 +31,7 @@ vi.mock('../../lib/api', () => ({
 // --------------------------------------------------------------------------
 
 import { apiClient } from '../../lib/api'
-import { createEvent, updateEvent, getEvent, listOrgEvents } from '../events'
+import { createEvent, updateEvent, getEvent, listOrgEvents, publishEvent, cancelEvent } from '../events'
 
 const VALID_PAYLOAD = {
   title: 'Test Event',
@@ -117,5 +117,33 @@ describe('listOrgEvents', () => {
     const result = await listOrgEvents()
 
     expect(result).toEqual(response)
+  })
+})
+
+// --------------------------------------------------------------------------
+// FE-TEST-03: publishEvent and cancelEvent
+// --------------------------------------------------------------------------
+
+describe('publishEvent', () => {
+  it('calls apiClient.post with /organisation/events/:eventId/publish (no body)', async () => {
+    const publishedEvent = { ...CREATED_EVENT, status: 'PUBLISHED', publishedAt: '2026-05-01T00:00:00.000Z' }
+    vi.mocked(apiClient.post).mockResolvedValue(publishedEvent)
+
+    const result = await publishEvent('event-123')
+
+    expect(apiClient.post).toHaveBeenCalledWith('/organisation/events/event-123/publish', undefined)
+    expect(result).toEqual(publishedEvent)
+  })
+})
+
+describe('cancelEvent', () => {
+  it('calls apiClient.post with /organisation/events/:eventId/cancel (no body)', async () => {
+    const cancelledEvent = { ...CREATED_EVENT, status: 'CANCELLED', cancelledAt: '2026-06-01T00:00:00.000Z' }
+    vi.mocked(apiClient.post).mockResolvedValue(cancelledEvent)
+
+    const result = await cancelEvent('event-123')
+
+    expect(apiClient.post).toHaveBeenCalledWith('/organisation/events/event-123/cancel', undefined)
+    expect(result).toEqual(cancelledEvent)
   })
 })

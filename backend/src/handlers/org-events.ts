@@ -15,6 +15,8 @@ import { Router, type Request, type Response } from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { getItem, putItem, updateItem, queryItems, queryItemsPaginated } from '../lib/dynamodb'
 import { validatePostcode, isDateInFuture, isEndTimeAfterStartTime } from '../lib/eventValidation'
+import { cancelEventRegistrations } from '../lib/eventCancellation'
+import { enqueueEventCancelled } from '../lib/eventMailer'
 
 const TABLE = (): string => {
   const name = process.env.DYNAMODB_TABLE_NAME
@@ -250,22 +252,35 @@ orgEventsRouter.get('/:eventId', async (req: Request, res: Response): Promise<vo
   const orgId = req.session!.orgId!
   const { eventId } = req.params
 
-  const event = await getItem(TABLE(), { PK: `EVENT#${eventId}`, SK: 'PROFILE' })
+  const event = await getOwnedEvent(eventId, orgId)
 
-  if (!event || (event.orgId as string) !== orgId) {
+  if (!event) {
     res.status(404).json({ error: 'Event not found.' })
     return
   }
 
-  const roleItems = await queryItems(
-    TABLE(),
-    'PK = :pk AND begins_with(SK, :skPrefix)',
-    { ':pk': `EVENT#${eventId}`, ':skPrefix': 'ROLE#' }
-  )
+  const [roleItems, pendingRegs] = await Promise.all([
+    queryItems(
+      TABLE(),
+      'PK = :pk AND begins_with(SK, :skPrefix)',
+      { ':pk': `EVENT#${eventId}`, ':skPrefix': 'ROLE#' }
+    ),
+    queryItems(
+      TABLE(),
+      'GSI4PK = :gsi4pk',
+      { ':gsi4pk': `EVENT#${eventId}`, ':pending': 'PENDING' },
+      {
+        indexName: 'GSI4',
+        filterExpression: '#status = :pending',
+        expressionAttributeNames: { '#status': 'status' },
+      }
+    ),
+  ])
 
   const roles = roleItems.map(stripRoleKeys)
+  const pendingRegistrationCount = pendingRegs.length
 
-  res.status(200).json({ ...stripEventKeys(event), roles })
+  res.status(200).json({ ...stripEventKeys(event), roles, pendingRegistrationCount })
 })
 
 // --------------------------------------------------------------------------
@@ -279,9 +294,9 @@ orgEventsRouter.patch('/:eventId', async (req: Request, res: Response): Promise<
   // Remove orgId from body
   const { orgId: _ignoredOrgId, ...fields } = body // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  const event = await getItem(TABLE(), { PK: `EVENT#${eventId}`, SK: 'PROFILE' })
+  const event = await getOwnedEvent(eventId, orgId)
 
-  if (!event || (event.orgId as string) !== orgId) {
+  if (!event) {
     res.status(404).json({ error: 'Event not found.' })
     return
   }
@@ -360,3 +375,133 @@ orgEventsRouter.patch('/:eventId', async (req: Request, res: Response): Promise<
 
   res.status(200).json(updatedEvent ? stripEventKeys(updatedEvent) : stripEventKeys(event))
 })
+
+// --------------------------------------------------------------------------
+// POST /organisation/events/:eventId/publish
+// --------------------------------------------------------------------------
+orgEventsRouter.post('/:eventId/publish', async (req: Request, res: Response): Promise<void> => {
+  const orgId = req.session!.orgId!
+  const { eventId } = req.params
+
+  const event = await getOwnedEvent(eventId, orgId)
+  if (!event) {
+    res.status(404).json({ error: 'Event not found.' })
+    return
+  }
+
+  if ((event.status as string) !== 'DRAFT') {
+    res.status(409).json({ error: 'Only DRAFT events can be published.' })
+    return
+  }
+
+  // Require at least one role
+  const roles = await queryItems(
+    TABLE(),
+    'PK = :pk AND begins_with(SK, :skPrefix)',
+    { ':pk': `EVENT#${eventId}`, ':skPrefix': 'ROLE#' }
+  )
+
+  if (roles.length === 0) {
+    res.status(400).json({ error: 'An event must have at least one role before it can be published.' })
+    return
+  }
+
+  const publishedAt = new Date().toISOString()
+
+  await updateItem(
+    TABLE(),
+    { PK: `EVENT#${eventId}`, SK: 'PROFILE' },
+    'SET #status = :published, GSI3PK = :gsi3pk, publishedAt = :publishedAt',
+    {
+      ':published': 'PUBLISHED',
+      ':gsi3pk': 'EVENT_STATUS#PUBLISHED',
+      ':publishedAt': publishedAt,
+    },
+    { '#status': 'status' }
+  )
+
+  const updatedEvent = await getItem(TABLE(), { PK: `EVENT#${eventId}`, SK: 'PROFILE' })
+  res.status(200).json(updatedEvent ? stripEventKeys(updatedEvent) : { ...stripEventKeys(event), status: 'PUBLISHED', publishedAt })
+})
+
+// --------------------------------------------------------------------------
+// POST /organisation/events/:eventId/cancel
+// --------------------------------------------------------------------------
+orgEventsRouter.post('/:eventId/cancel', async (req: Request, res: Response): Promise<void> => {
+  const orgId = req.session!.orgId!
+  const { eventId } = req.params
+
+  const event = await getOwnedEvent(eventId, orgId)
+  if (!event) {
+    res.status(404).json({ error: 'Event not found.' })
+    return
+  }
+
+  const status = event.status as string
+
+  if (status === 'DRAFT') {
+    res.status(409).json({ error: 'Draft events cannot be cancelled. Delete the event instead.' })
+    return
+  }
+
+  if (status === 'COMPLETED' || status === 'CANCELLED') {
+    res.status(409).json({ error: 'Completed events cannot be cancelled.' })
+    return
+  }
+
+  const cancelledAt = new Date().toISOString()
+
+  await updateItem(
+    TABLE(),
+    { PK: `EVENT#${eventId}`, SK: 'PROFILE' },
+    'SET #status = :cancelled, GSI3PK = :gsi3pk, cancelledAt = :cancelledAt',
+    {
+      ':cancelled': 'CANCELLED',
+      ':gsi3pk': 'EVENT_STATUS#CANCELLED',
+      ':cancelledAt': cancelledAt,
+    },
+    { '#status': 'status' }
+  )
+
+  // Query GSI4 for all PENDING registrations on this event
+  const pendingRegistrations = await queryItems(
+    TABLE(),
+    'GSI4PK = :gsi4pk',
+    { ':gsi4pk': `EVENT#${eventId}`, ':pending': 'PENDING' },
+    {
+      indexName: 'GSI4',
+      filterExpression: '#status = :pending',
+      expressionAttributeNames: { '#status': 'status' },
+    }
+  )
+
+  // Bulk-cancel PENDING registrations in batches of 25
+  await cancelEventRegistrations(pendingRegistrations, TABLE())
+
+  // Enqueue SQS notification (or log locally)
+  await enqueueEventCancelled({
+    eventId,
+    eventTitle: event.title as string,
+    cancelledAt,
+    affectedRegistrations: pendingRegistrations.map((r) => ({
+      regId: r.regId as string,
+      volunteerId: r.volunteerId as string,
+    })),
+  })
+
+  const updatedEvent = await getItem(TABLE(), { PK: `EVENT#${eventId}`, SK: 'PROFILE' })
+  res.status(200).json(updatedEvent ? stripEventKeys(updatedEvent) : { ...stripEventKeys(event), status: 'CANCELLED', cancelledAt })
+})
+
+// --------------------------------------------------------------------------
+// Shared helper: fetch event and verify ownership
+// --------------------------------------------------------------------------
+
+async function getOwnedEvent(
+  eventId: string,
+  orgId: string
+): Promise<Record<string, unknown> | undefined> {
+  const event = await getItem(TABLE(), { PK: `EVENT#${eventId}`, SK: 'PROFILE' })
+  if (!event || (event.orgId as string) !== orgId) return undefined
+  return event
+}
