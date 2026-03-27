@@ -77,7 +77,7 @@ function buildRolesWithSlots(items: Record<string, unknown>[]): Record<string, u
     const roleId = slot.roleId as string
     const role = roles.get(roleId)
     if (role) {
-      ;(role.slots as Record<string, unknown>[]).push(stripRoleKeys(slot))
+      (role.slots as Record<string, unknown>[]).push(stripRoleKeys(slot))
     }
   }
 
@@ -128,13 +128,8 @@ function validateSlotFields(fields: Record<string, unknown>): string | null {
  * TODO: wired up by Volunteer Registration PRD — queries GSI on REGISTRATION items by slotId/roleId
  */
 async function hasActiveRegistrationsForSlot(_slotId: string): Promise<boolean> {
-  // Placeholder: always returns false until Volunteer Registration PRD wires up the GSI query.
-  const results = await queryItems(
-    TABLE(),
-    'PK = :placeholder',
-    { ':placeholder': `SLOT_REG_PLACEHOLDER#${_slotId}` }
-  )
-  return results.length > 0
+  // TODO: wired up by Volunteer Registration PRD — queries GSI on REGISTRATION items by slotId
+  return false
 }
 
 /**
@@ -509,9 +504,12 @@ orgEventsRouter.post('/:eventId/publish', async (req: Request, res: Response): P
     { ':pk': `EVENT#${eventId}`, ':skPrefix': 'ROLE#' }
   )
 
-  const hasRoleWithSlot =
-    roleAndSlotItems.some((item) => !isSlotItem(item)) &&
-    roleAndSlotItems.some((item) => isSlotItem(item))
+  // Use buildRolesWithSlots to correctly check parentage — a role must have
+  // at least one slot nested under it, not just any slot existing in the partition.
+  const rolesWithSlots = buildRolesWithSlots(roleAndSlotItems)
+  const hasRoleWithSlot = rolesWithSlots.some(
+    (role) => Array.isArray(role.slots) && (role.slots as unknown[]).length > 0
+  )
 
   if (!hasRoleWithSlot) {
     res.status(400).json({ error: 'Event must have at least one role with at least one slot before publishing.' })
@@ -689,10 +687,13 @@ orgEventsRouter.patch('/:eventId/roles/:roleId', async (req: Request, res: Respo
 
   const setClauses: string[] = []
   const exprValues: Record<string, unknown> = {}
-  // 'name' is a DynamoDB reserved keyword — must be aliased via ExpressionAttributeNames
-  const exprNames: Record<string, string> = { '#name': 'name' }
+  // Only add #name alias when name is actually being updated — DynamoDB throws
+  // ValidationException if ExpressionAttributeNames contains unreferenced keys.
+  const exprNames: Record<string, string> = {}
 
   if (body.name !== undefined) {
+    // 'name' is a DynamoDB reserved keyword — must be aliased
+    exprNames['#name'] = 'name'
     setClauses.push('#name = :name')
     exprValues[':name'] = String(body.name).trim()
   }
@@ -711,7 +712,7 @@ orgEventsRouter.patch('/:eventId/roles/:roleId', async (req: Request, res: Respo
       { PK: `EVENT#${eventId}`, SK: `ROLE#${roleId}` },
       `SET ${setClauses.join(', ')}`,
       exprValues,
-      exprNames
+      Object.keys(exprNames).length > 0 ? exprNames : undefined
     )
   }
 
