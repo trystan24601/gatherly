@@ -185,6 +185,26 @@ describe('requireApprovedOrg middleware', () => {
     expect(next).toHaveBeenCalledOnce()
   })
 
+  it('returns 403 when org status is REJECTED', async () => {
+    const { req, res, next } = makeMocks()
+    ;(req as unknown as { session: { userId: string; role: string; orgId: string } }).session = {
+      userId: 'user-1',
+      role: 'ORG_ADMIN',
+      orgId: 'org-rejected',
+    }
+    ;(getItem as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      PK: 'ORG#org-rejected',
+      SK: 'PROFILE',
+      status: 'REJECTED',
+    })
+
+    await requireApprovedOrg(req, res, next)
+
+    expect(res.status).toHaveBeenCalledWith(403)
+    expect(res.json).toHaveBeenCalledWith({ error: 'Organisation is not approved.' })
+    expect(next).not.toHaveBeenCalled()
+  })
+
   it('returns 403 when orgId is missing from session', async () => {
     const { req, res, next } = makeMocks()
     ;(req as unknown as { session: { userId: string; role: string } }).session = {

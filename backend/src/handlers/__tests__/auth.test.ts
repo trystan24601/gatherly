@@ -469,6 +469,65 @@ describe('GET /auth/me', () => {
 
     expect(res.status).toBe(401)
   })
+
+  it('returns orgStatus PENDING for ORG_ADMIN with a PENDING org', async () => {
+    const orgAdminSession = {
+      sessionId: 'sess-org-admin',
+      userId: 'user-admin',
+      role: 'ORG_ADMIN',
+      orgId: 'org-123',
+      createdAt: new Date().toISOString(),
+      expiresAt: Math.floor(Date.now() / 1000) + 3600,
+    }
+    ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce(orgAdminSession)
+    ;(getItem as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(ORG_ADMIN_USER)
+      .mockResolvedValueOnce({
+        PK: 'ORG#org-123',
+        SK: 'PROFILE',
+        orgId: 'org-123',
+        status: 'PENDING',
+        submittedAt: '2026-01-01T00:00:00.000Z',
+      })
+
+    const res = await request(app)
+      .get('/auth/me')
+      .set('Cookie', 'sid=sess-org-admin')
+
+    expect(res.status).toBe(200)
+    expect(res.body.orgStatus).toBe('PENDING')
+    expect(res.body.orgSubmittedAt).toBe('2026-01-01T00:00:00.000Z')
+  })
+
+  it('returns orgStatus REJECTED with orgRejectionReason for ORG_ADMIN with a REJECTED org', async () => {
+    const orgAdminSession = {
+      sessionId: 'sess-org-admin-rej',
+      userId: 'user-admin',
+      role: 'ORG_ADMIN',
+      orgId: 'org-123',
+      createdAt: new Date().toISOString(),
+      expiresAt: Math.floor(Date.now() / 1000) + 3600,
+    }
+    ;(getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce(orgAdminSession)
+    ;(getItem as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(ORG_ADMIN_USER)
+      .mockResolvedValueOnce({
+        PK: 'ORG#org-123',
+        SK: 'PROFILE',
+        orgId: 'org-123',
+        status: 'REJECTED',
+        submittedAt: '2026-01-01T00:00:00.000Z',
+        rejectionReason: 'Insufficient information provided.',
+      })
+
+    const res = await request(app)
+      .get('/auth/me')
+      .set('Cookie', 'sid=sess-org-admin-rej')
+
+    expect(res.status).toBe(200)
+    expect(res.body.orgStatus).toBe('REJECTED')
+    expect(res.body.orgRejectionReason).toBe('Insufficient information provided.')
+  })
 })
 
 // --------------------------------------------------------------------------

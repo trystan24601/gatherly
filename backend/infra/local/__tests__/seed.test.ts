@@ -58,44 +58,44 @@ describe('seed.ts — seedData', () => {
     vi.clearAllMocks()
   })
 
-  it('seedData inserts exactly 1 Organisation item (PK=ORG#... SK=PROFILE)', async () => {
+  it('seedData inserts exactly 3 Organisation items (PK=ORG#... SK=PROFILE)', async () => {
     const { seedData } = await import('../seed')
     await seedData()
 
     const orgItems = capturedPuts.filter(
       (p) => p.PK.startsWith('ORG#') && p.SK === 'PROFILE'
     )
-    expect(orgItems).toHaveLength(1)
+    expect(orgItems).toHaveLength(3)
   })
 
-  it('seedData inserts exactly 2 User items (PK=USER#... SK=PROFILE) — volunteer and org admin', async () => {
+  it('seedData inserts exactly 5 User items (PK=USER#... SK=PROFILE)', async () => {
     const { seedData } = await import('../seed')
     await seedData()
 
     const userItems = capturedPuts.filter(
       (p) => p.PK.startsWith('USER#') && p.SK === 'PROFILE'
     )
-    expect(userItems).toHaveLength(2)
+    expect(userItems).toHaveLength(5)
   })
 
-  it('seedData inserts exactly 1 OrgEmail sentinel item (PK=ORGEMAIL#... SK=LOCK)', async () => {
+  it('seedData inserts exactly 3 OrgEmail sentinel items (PK=ORGEMAIL#... SK=LOCK)', async () => {
     const { seedData } = await import('../seed')
     await seedData()
 
     const sentinelItems = capturedPuts.filter(
       (p) => p.PK.startsWith('ORGEMAIL#') && p.SK === 'LOCK'
     )
-    expect(sentinelItems).toHaveLength(1)
+    expect(sentinelItems).toHaveLength(3)
   })
 
-  it('seedData inserts exactly 2 UserEmail sentinel items (PK=USEREMAIL#... SK=LOCK)', async () => {
+  it('seedData inserts exactly 5 UserEmail sentinel items (PK=USEREMAIL#... SK=LOCK)', async () => {
     const { seedData } = await import('../seed')
     await seedData()
 
     const sentinelItems = capturedPuts.filter(
       (p) => p.PK.startsWith('USEREMAIL#') && p.SK === 'LOCK'
     )
-    expect(sentinelItems).toHaveLength(2)
+    expect(sentinelItems).toHaveLength(5)
   })
 
   it('volunteer user item has role VOLUNTEER and passwordHash set', async () => {
@@ -123,6 +123,52 @@ describe('seed.ts — seedData', () => {
     expect((adminItem?.Item.passwordHash as string).startsWith('$2b$')).toBe(true)
   })
 
+  it('seeded pending org has GSI1PK = ORG_STATUS#PENDING', async () => {
+    const { seedData } = await import('../seed')
+    await seedData()
+
+    const pendingOrg = capturedPuts.find(
+      (p) => p.PK === 'ORG#org-seed-pending' && p.SK === 'PROFILE'
+    )
+    expect(pendingOrg?.Item.GSI1PK).toBe('ORG_STATUS#PENDING')
+    expect(pendingOrg?.Item.status).toBe('PENDING')
+  })
+
+  it('seeded rejected org has GSI1PK = ORG_STATUS#REJECTED', async () => {
+    const { seedData } = await import('../seed')
+    await seedData()
+
+    const rejectedOrg = capturedPuts.find(
+      (p) => p.PK === 'ORG#org-seed-rejected' && p.SK === 'PROFILE'
+    )
+    expect(rejectedOrg?.Item.GSI1PK).toBe('ORG_STATUS#REJECTED')
+    expect(rejectedOrg?.Item.status).toBe('REJECTED')
+    expect((rejectedOrg?.Item.rejectionReason as string)).toMatch(/The organisation details provided were incomplete/)
+  })
+
+  it('seeded approved org has GSI1PK = ORG_STATUS#APPROVED', async () => {
+    const { seedData } = await import('../seed')
+    await seedData()
+
+    const approvedOrg = capturedPuts.find(
+      (p) => p.PK === 'ORG#org-demo-runners' && p.SK === 'PROFILE'
+    )
+    expect(approvedOrg?.Item.GSI1PK).toBe('ORG_STATUS#APPROVED')
+    expect(approvedOrg?.Item.status).toBe('APPROVED')
+  })
+
+  it('super admin user has role SUPER_ADMIN', async () => {
+    const { seedData } = await import('../seed')
+    await seedData()
+
+    const superAdminItem = capturedPuts.find(
+      (p) => p.PK === 'USER#user-seed-super-admin' && p.SK === 'PROFILE'
+    )
+    expect(superAdminItem?.Item.role).toBe('SUPER_ADMIN')
+    expect(typeof superAdminItem?.Item.passwordHash).toBe('string')
+    expect((superAdminItem?.Item.passwordHash as string).startsWith('$2b$')).toBe(true)
+  })
+
   it('seedData inserts exactly 1 Event item (PK=EVENT#... SK=PROFILE)', async () => {
     const { seedData } = await import('../seed')
     await seedData()
@@ -143,16 +189,6 @@ describe('seed.ts — seedData', () => {
     expect(roleItems).toHaveLength(2)
   })
 
-  it('seeded org has status APPROVED', async () => {
-    const { seedData } = await import('../seed')
-    await seedData()
-
-    const orgItem = capturedPuts.find(
-      (p) => p.PK.startsWith('ORG#') && p.SK === 'PROFILE'
-    )
-    expect(orgItem?.Item.status).toBe('APPROVED')
-  })
-
   it('seeded event has status PUBLISHED', async () => {
     const { seedData } = await import('../seed')
     await seedData()
@@ -163,14 +199,14 @@ describe('seed.ts — seedData', () => {
     expect(eventItem?.Item.status).toBe('PUBLISHED')
   })
 
-  it('seedData is idempotent — calling twice produces 9 items on first call and does not throw', async () => {
+  it('seedData is idempotent — calling once produces 19 items and does not throw on second call', async () => {
     const { seedData } = await import('../seed')
     await seedData()
-    // 1 Org + 1 OrgEmail sentinel
-    // + 1 User(volunteer) + 1 UserEmail(volunteer)
-    // + 1 User(admin) + 1 UserEmail(admin)
-    // + 1 Event + 2 Roles = 9 items
-    expect(capturedPuts).toHaveLength(9)
+    // 3 Orgs + 3 OrgEmail sentinels
+    // + 5 Users (volunteer, approved-admin, pending-admin, rejected-admin, super-admin)
+    // + 5 UserEmail sentinels
+    // + 1 Event + 2 Roles = 19 items
+    expect(capturedPuts).toHaveLength(19)
     // Second call should not throw (conditional puts handle duplicates)
     await expect(seedData()).resolves.not.toThrow()
   })

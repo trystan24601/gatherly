@@ -255,7 +255,19 @@ authRouter.get('/me', async (req: Request, res: Response): Promise<void> => {
     return
   }
 
-  res.status(200).json(stripSensitiveFields(user))
+  const safeUser = stripSensitiveFields(user)
+
+  // Enrich ORG_ADMIN responses with live org status fields
+  if ((user.role as string) === 'ORG_ADMIN' && user.orgId) {
+    const org = await getItem(TABLE(), { PK: `ORG#${user.orgId as string}`, SK: 'PROFILE' })
+    if (org) {
+      safeUser.orgStatus = org.status as string
+      if (org.submittedAt) safeUser.orgSubmittedAt = org.submittedAt as string
+      if (org.rejectionReason) safeUser.orgRejectionReason = org.rejectionReason as string
+    }
+  }
+
+  res.status(200).json(safeUser)
 })
 
 // POST /auth/password-reset/request

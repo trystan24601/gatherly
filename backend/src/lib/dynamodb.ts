@@ -153,3 +153,37 @@ export async function queryItems(
   const result = await getDocClient().send(new QueryCommand(input))
   return (result.Items ?? []) as Record<string, unknown>[]
 }
+
+export interface QueryPageResult {
+  items: Record<string, unknown>[]
+  lastEvaluatedKey: Record<string, unknown> | undefined
+}
+
+export async function queryItemsPaginated(
+  tableName: string,
+  keyConditionExpression: string,
+  expressionAttributeValues: Record<string, unknown>,
+  options?: {
+    indexName?: string
+    limit?: number
+    scanIndexForward?: boolean
+    exclusiveStartKey?: Record<string, unknown>
+  }
+): Promise<QueryPageResult> {
+  const input: QueryCommandInput = {
+    TableName: tableName,
+    KeyConditionExpression: keyConditionExpression,
+    ExpressionAttributeValues: expressionAttributeValues,
+    ...(options?.indexName ? { IndexName: options.indexName } : {}),
+    ...(options?.limit ? { Limit: options.limit } : {}),
+    ...(options?.scanIndexForward !== undefined
+      ? { ScanIndexForward: options.scanIndexForward }
+      : {}),
+    ...(options?.exclusiveStartKey ? { ExclusiveStartKey: options.exclusiveStartKey } : {}),
+  }
+  const result = await getDocClient().send(new QueryCommand(input))
+  return {
+    items: (result.Items ?? []) as Record<string, unknown>[],
+    lastEvaluatedKey: result.LastEvaluatedKey as Record<string, unknown> | undefined,
+  }
+}

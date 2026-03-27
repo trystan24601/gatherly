@@ -15,6 +15,9 @@ export interface AuthUser {
   lastName: string
   role: string
   orgId?: string
+  orgStatus?: string
+  orgSubmittedAt?: string
+  orgRejectionReason?: string
 }
 
 export interface AuthContextValue {
