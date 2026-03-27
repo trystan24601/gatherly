@@ -5,8 +5,9 @@ import { healthHandler } from './handlers/health'
 import { authRouter } from './handlers/auth'
 import { organisationsRouter } from './handlers/organisations'
 import { adminOrgsRouter } from './handlers/admin-organisations'
-import { requireAuth, requireRole } from './middleware/auth.middleware'
+import { requireAuth, requireRole, requireApprovedOrg } from './middleware/auth.middleware'
 import { resetLimiter } from './lib/rateLimiter'
+import { orgEventsRouter } from './handlers/org-events'
 
 export const app = express()
 
@@ -45,6 +46,15 @@ app.use('/organisations', organisationsRouter)
 
 // Admin organisation management (requires SUPER_ADMIN)
 app.use('/admin/organisations', requireAuth, requireRole('SUPER_ADMIN'), adminOrgsRouter)
+
+// Org Admin event management (requires approved ORG_ADMIN)
+app.use(
+  '/organisation/events',
+  requireAuth,
+  requireRole('ORG_ADMIN'),
+  requireApprovedOrg,
+  orgEventsRouter
+)
 
 // Test-only: reset in-memory rate limiter (non-production only)
 if (process.env.NODE_ENV !== 'production') {

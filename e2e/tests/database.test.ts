@@ -118,8 +118,9 @@ test.describe('Seed data acceptance', () => {
     )
     expect(eventItems.length).toBeGreaterThanOrEqual(1)
 
-    const eventStatus = eventItems[0]?.status?.S
-    expect(eventStatus).toBe('PUBLISHED')
+    // At least one event item must be PUBLISHED (the seeded event-demo-fun-run)
+    const hasPublished = eventItems.some((item) => item.status?.S === 'PUBLISHED')
+    expect(hasPublished).toBe(true)
   })
 
   test('table contains at least 2 Role items', async () => {
