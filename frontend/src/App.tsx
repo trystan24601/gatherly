@@ -13,16 +13,15 @@ import { OrgPendingPage } from './pages/OrgPendingPage'
 import { OrgRejectedPage } from './pages/OrgRejectedPage'
 import { AdminOrgListPage } from './pages/AdminOrgListPage'
 import { AdminOrgDetailPage } from './pages/AdminOrgDetailPage'
+import { OrgDashboardPage } from './pages/OrgDashboardPage'
+import { OrgEventCreatePage } from './pages/OrgEventCreatePage'
+import { OrgEventEditPage } from './pages/OrgEventEditPage'
 import { LandingScreen } from './screens/LandingScreen'
 import { DiscoveryFeedScreen } from './screens/DiscoveryFeedScreen'
 import { EventDetailScreen } from './screens/EventDetailScreen'
 import { VolunteerDashboardScreen } from './screens/VolunteerDashboardScreen'
 import { OrganiserEventDashboardScreen } from './screens/OrganiserEventDashboardScreen'
 import { OrganiserRegistrationReviewScreen } from './screens/OrganiserRegistrationReviewScreen'
-
-function OrgDashboard() {
-  return <div>Org Admin Dashboard — placeholder</div>
-}
 
 function AdminDashboard() {
   return <div>Super Admin Dashboard — placeholder</div>
@@ -60,7 +59,7 @@ export function App() {
             path="/org/dashboard"
             element={
               <ProtectedRoute role="ORG_ADMIN">
-                <OrgDashboard />
+                <OrgDashboardPage />
               </ProtectedRoute>
             }
           />
@@ -94,7 +93,25 @@ export function App() {
             path="/organisation/dashboard"
             element={
               <ProtectedRoute role="ORG_ADMIN">
-                <OrgDashboard />
+                <OrgDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Org Admin event management */}
+          <Route
+            path="/organisation/events/new"
+            element={
+              <ProtectedRoute role="ORG_ADMIN">
+                <OrgEventCreatePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organisation/events/:eventId/edit"
+            element={
+              <ProtectedRoute role="ORG_ADMIN">
+                <OrgEventEditPage />
               </ProtectedRoute>
             }
           />
