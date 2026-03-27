@@ -59,9 +59,38 @@ Implementation: GSI3 query on `GSI3PK = EVENT_STATUS#PUBLISHED`, ScanIndexForwar
 
 `GET /events/:eventId` (VOLUNTEER):
 - Returns full event detail including roles array
-- Each role includes: `roleId`, `name`, `description`, `headcount`, `filledCount`, `shiftStart`, `shiftEnd`, `skillIds`, `isFull` (filledCount >= headcount)
+- Each role includes: `roleId`, `name`, `description`, `skillIds`, and a nested `slots` array
+- Each slot includes: `slotId`, `location`, `shiftStart`, `shiftEnd`, `headcount`, `filledCount`, `isFull` (filledCount >= headcount per slot), `status`
 - Does NOT include individual volunteer names or emails (privacy)
 - Returns `404` if event is not PUBLISHED/ACTIVE or does not exist
+
+Example roles response shape:
+```json
+{
+  "roles": [
+    {
+      "roleId": "...",
+      "name": "Water Station Marshal",
+      "description": "...",
+      "skillIds": ["..."],
+      "slots": [
+        {
+          "slotId": "...",
+          "location": "Station A",
+          "shiftStart": "08:00",
+          "shiftEnd": "12:00",
+          "headcount": 5,
+          "filledCount": 3,
+          "isFull": false,
+          "status": "OPEN"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Volunteers register for a slot via `POST /events/:eventId/slots/:slotId/registrations`.
 
 ### FR-04 — Discovery Page UI
 
@@ -90,7 +119,8 @@ Implementation: GSI3 query on `GSI3PK = EVENT_STATUS#PUBLISHED`, ScanIndexForwar
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `GET` | `/events` | VOLUNTEER | Paginated event discovery feed |
-| `GET` | `/events/:eventId` | VOLUNTEER | Event detail + roles |
+| `GET` | `/events/:eventId` | VOLUNTEER | Event detail + roles (each role includes nested slots) |
+| `POST` | `/events/:eventId/slots/:slotId/registrations` | VOLUNTEER | Register for a specific slot |
 
 ---
 
@@ -135,11 +165,14 @@ Implementation: GSI3 query on `GSI3PK = EVENT_STATUS#PUBLISHED`, ScanIndexForwar
 │  Volunteer Roles                        │
 │─────────────────────────────────────────│
 │  Water Station Marshal                  │
-│  08:00–12:00 · 3/5 filled              │
-│              [Register for this role →] │
+│    Station A · 08:00–12:00 · 3/5 filled │
+│              [Register for this slot →] │
+│    Station B · 08:00–12:00 · 5/5 filled │
+│                                  [FULL] │
 │─────────────────────────────────────────│
-│  Finish Line Marshal        FULL        │
-│  12:00–16:00 · 3/3 filled              │
+│  Finish Line Marshal                    │
+│    Finish Line · 12:00–16:00 · 3/3 filled│
+│                                  [FULL] │
 └─────────────────────────────────────────┘
 ```
 
@@ -156,9 +189,9 @@ Implementation: GSI3 query on `GSI3PK = EVENT_STATUS#PUBLISHED`, ScanIndexForwar
 | AC-05 | `typeId` filter returns only events of that type |
 | AC-06 | `city` filter (case-insensitive) returns matching events |
 | AC-07 | `city` value < 2 chars returns `400` |
-| AC-08 | `GET /events/:eventId` returns roles array with `isFull` flag |
-| AC-09 | Full roles still appear in event detail (with FULL indicator) |
-| AC-10 | Event detail page shows "Register" button for non-full roles |
+| AC-08 | `GET /events/:eventId` returns roles array with a nested `slots` array; each slot carries `isFull` (filledCount >= headcount) |
+| AC-09 | Full slots still appear in event detail (with FULL indicator); non-full slots show "Register for this slot" button |
+| AC-10 | Clicking "Register for this slot" calls `POST /events/:eventId/slots/:slotId/registrations` for the selected slot |
 | AC-11 | Discovery page shows skeleton loaders during initial fetch |
 | AC-12 | "Load more" appends next page of events |
 | AC-13 | Filters update URL query params |

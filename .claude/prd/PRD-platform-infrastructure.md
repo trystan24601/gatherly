@@ -4,7 +4,7 @@
 
 ## 1. Background
 
-Before any product features can be built, the platform requires a foundational infrastructure layer. This covers the AWS cloud infrastructure (Terraform), a local development environment (Docker Compose), a CI/CD pipeline (GitHub Actions), observability tooling, and the DynamoDB single-table schema design with all 6 GSIs. All subsequent features depend on this foundation. The stack: Node.js 20 + TypeScript backend (Express locally, Lambda in prod), React + Vite + Tailwind frontend served via CloudFront/S3, DynamoDB on-demand single-table. All AWS resources in `eu-west-2` (London).
+Before any product features can be built, the platform requires a foundational infrastructure layer. This covers the AWS cloud infrastructure (Terraform), a local development environment (Docker Compose), a CI/CD pipeline (GitHub Actions), observability tooling, and the DynamoDB single-table schema design with all 6 GSIs. All subsequent features depend on this foundation. The stack: Node.js 20 + TypeScript backend (Express locally, Lambda in prod), React + Vite + Tailwind frontend served via CloudFront/S3, DynamoDB on-demand single-table with 7 GSIs. All AWS resources in `eu-west-2` (London).
 
 ## 2. User Roles
 
@@ -45,7 +45,7 @@ All AWS resources defined in Terraform under `infra/terraform/`:
 
 ### FR-02 — DynamoDB Single-Table Schema
 
-One table, composite primary key (`PK` + `SK`), 6 GSIs:
+One table, composite primary key (`PK` + `SK`), 7 GSIs:
 
 | GSI | PK | SK | Purpose |
 |---|---|---|---|
@@ -55,6 +55,7 @@ One table, composite primary key (`PK` + `SK`), 6 GSIs:
 | GSI4 | `GSI4PK` | `GSI4SK` | Registrations by event (event roster) |
 | GSI5 | `GSI5PK` | `GSI5SK` | Registrations by volunteer |
 | GSI6 | `GSI6PK` | `GSI6SK` | Sessions by userId |
+| GSI7 | `GSI7PK` | `GSI7SK` | Slots by event (fetch all slots for a role/event) |
 
 All GSIs: PAY_PER_REQUEST billing, ALL attribute projection.
 
@@ -68,9 +69,12 @@ Entity key patterns:
 | OrgEmail sentinel | `ORGEMAIL#<email>` | `LOCK` |
 | Event | `EVENT#<eventId>` | `PROFILE` |
 | Role | `EVENT#<eventId>` | `ROLE#<roleId>` |
+| Slot | `ROLE#<roleId>` | `SLOT#<slotId>` |
 | Registration | `REG#<regId>` | `META` |
 | Skill | `SKILL#<skillId>` | `PROFILE` |
 | VolunteerSkill | `USER#<userId>` | `SKILL#<skillId>` |
+
+SLOT item attributes: `slotId`, `roleId`, `eventId`, `location`, `shiftStart`, `shiftEnd`, `headcount`, `filledCount`, `status`. GSI7PK = `SLOT#<slotId>` for direct lookup by slotId (used by the registration endpoint).
 
 **Critical rules (lessons from events-dog):**
 - `status`, `name`, `type` are DynamoDB reserved words — ALL UpdateExpressions touching these fields MUST use `ExpressionAttributeNames` aliases
@@ -91,10 +95,10 @@ Single `docker compose up` starts:
 | `mailhog` | `mailhog/mailhog` | 8025 | SMTP capture + web UI |
 
 Scripts:
-- `infra/local/bootstrap.ts` — creates table + all 6 GSIs (idempotent)
+- `infra/local/bootstrap.ts` — creates table + all 7 GSIs (idempotent)
 - `infra/local/seed.ts` — populates demo data (idempotent — safe to run twice)
 
-Seed data: 1 APPROVED org (Gatherly Demo Runners), 1 volunteer user, 1 PUBLISHED event with 2 roles.
+Seed data: 1 APPROVED org (Gatherly Demo Runners), 1 volunteer user, 1 PUBLISHED event with 2 roles (each role has at least one slot).
 
 `.env.local.example` committed; `.env.local` gitignored.
 
@@ -175,7 +179,7 @@ Browser checks:
 | ID | Criterion |
 |---|---|
 | AC-01 | `docker compose up` starts all services; frontend accessible at `http://localhost:5173` within 60 seconds |
-| AC-02 | `npm run db:bootstrap` creates the DynamoDB table with all 6 GSIs without errors |
+| AC-02 | `npm run db:bootstrap` creates the DynamoDB table with all 7 GSIs without errors |
 | AC-03 | `npm run db:seed` populates demo org, volunteer, and event; safe to run twice (idempotent) |
 | AC-04 | `GET /health` returns `{"status":"ok"}` in under 500ms |
 | AC-05 | `terraform plan` runs without errors against dev environment from a clean checkout |
