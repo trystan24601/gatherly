@@ -169,44 +169,88 @@ describe('seed.ts — seedData', () => {
     expect((superAdminItem?.Item.passwordHash as string).startsWith('$2b$')).toBe(true)
   })
 
-  it('seedData inserts exactly 1 Event item (PK=EVENT#... SK=PROFILE)', async () => {
+  it('seedData inserts exactly 3 Event items (PK=EVENT#... SK=PROFILE)', async () => {
     const { seedData } = await import('../seed')
     await seedData()
 
     const eventItems = capturedPuts.filter(
       (p) => p.PK.startsWith('EVENT#') && p.SK === 'PROFILE'
     )
-    expect(eventItems).toHaveLength(1)
+    // event-demo-fun-run (PUBLISHED), event-demo-published (PUBLISHED), event-demo-draft (DRAFT)
+    expect(eventItems).toHaveLength(3)
   })
 
-  it('seedData inserts exactly 2 Role items (PK=EVENT#... SK=ROLE#...)', async () => {
+  it('seedData inserts exactly 4 Role items (PK=EVENT#... SK=ROLE#...)', async () => {
     const { seedData } = await import('../seed')
     await seedData()
 
     const roleItems = capturedPuts.filter(
       (p) => p.PK.startsWith('EVENT#') && p.SK.startsWith('ROLE#')
     )
-    expect(roleItems).toHaveLength(2)
+    // 2 roles for event-demo-fun-run, 1 for event-demo-published, 1 for event-demo-draft
+    expect(roleItems).toHaveLength(4)
   })
 
-  it('seeded event has status PUBLISHED', async () => {
+  it('seedData inserts exactly 1 PENDING Registration item (PK=REG#... SK=META)', async () => {
+    const { seedData } = await import('../seed')
+    await seedData()
+
+    const regItems = capturedPuts.filter(
+      (p) => p.PK.startsWith('REG#') && p.SK === 'META'
+    )
+    expect(regItems).toHaveLength(1)
+    expect(regItems[0].Item.status).toBe('PENDING')
+  })
+
+  it('seeded fun-run event has status PUBLISHED', async () => {
     const { seedData } = await import('../seed')
     await seedData()
 
     const eventItem = capturedPuts.find(
-      (p) => p.PK.startsWith('EVENT#') && p.SK === 'PROFILE'
+      (p) => p.PK === 'EVENT#event-demo-fun-run' && p.SK === 'PROFILE'
     )
     expect(eventItem?.Item.status).toBe('PUBLISHED')
   })
 
-  it('seedData is idempotent — calling once produces 19 items and does not throw on second call', async () => {
+  it('seeded published event for cancel tests has status PUBLISHED and a PENDING registration', async () => {
+    const { seedData } = await import('../seed')
+    await seedData()
+
+    const eventItem = capturedPuts.find(
+      (p) => p.PK === 'EVENT#event-demo-published' && p.SK === 'PROFILE'
+    )
+    expect(eventItem?.Item.status).toBe('PUBLISHED')
+
+    const regItem = capturedPuts.find(
+      (p) => p.PK === 'REG#reg-demo-pending' && p.SK === 'META'
+    )
+    expect(regItem?.Item.status).toBe('PENDING')
+    expect(regItem?.Item.eventId).toBe('event-demo-published')
+  })
+
+  it('seeded draft event for publish tests has status DRAFT with one role', async () => {
+    const { seedData } = await import('../seed')
+    await seedData()
+
+    const eventItem = capturedPuts.find(
+      (p) => p.PK === 'EVENT#event-demo-draft' && p.SK === 'PROFILE'
+    )
+    expect(eventItem?.Item.status).toBe('DRAFT')
+
+    const roleItem = capturedPuts.find(
+      (p) => p.PK === 'EVENT#event-demo-draft' && p.SK.startsWith('ROLE#')
+    )
+    expect(roleItem).toBeDefined()
+  })
+
+  it('seedData is idempotent — calling once produces 24 items and does not throw on second call', async () => {
     const { seedData } = await import('../seed')
     await seedData()
     // 3 Orgs + 3 OrgEmail sentinels
     // + 5 Users (volunteer, approved-admin, pending-admin, rejected-admin, super-admin)
     // + 5 UserEmail sentinels
-    // + 1 Event + 2 Roles = 19 items
-    expect(capturedPuts).toHaveLength(19)
+    // + 3 Events + 4 Roles + 1 Registration = 24 items
+    expect(capturedPuts).toHaveLength(24)
     // Second call should not throw (conditional puts handle duplicates)
     await expect(seedData()).resolves.not.toThrow()
   })

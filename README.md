@@ -47,7 +47,7 @@ Services:
 | Org Admin (rejected) | admin@rejected-org.com | `TestPassword123!` | Org rejected with reason |
 | Super Admin | superadmin@gatherlywork.com | `TestPassword123!` | Can approve/reject orgs at `/admin/organisations` |
 
-Seed data includes: 3 organisations (approved, pending, rejected), 1 published event with 2 roles, 5 users across all roles.
+Seed data includes: 3 organisations (approved, pending, rejected), events in all lifecycle states (DRAFT, PUBLISHED, CANCELLED, COMPLETED), 5 users across all roles.
 
 ## Environment Variables
 

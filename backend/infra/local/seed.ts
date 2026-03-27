@@ -20,6 +20,13 @@ const REJECTED_ORG_EMAIL = 'admin@rejected-org.com'
 const EVENT_ID = 'event-demo-fun-run'
 const ROLE_ID_1 = 'role-marshal'
 const ROLE_ID_2 = 'role-water-station'
+// Published event used for cancel E2E tests
+const PUBLISHED_EVENT_ID = 'event-demo-published'
+const PUBLISHED_ROLE_ID = 'role-demo-published-marshal'
+const PENDING_REG_ID = 'reg-demo-pending'
+// Draft event used for publish E2E tests
+const DRAFT_EVENT_ID = 'event-demo-draft'
+const DRAFT_ROLE_ID = 'role-demo-draft-marshal'
 
 // Pre-computed bcrypt hash (cost 12) for "TestPassword123!"
 // Generated with: bcrypt.hashSync('TestPassword123!', 12)
@@ -44,6 +51,11 @@ async function upsert(
     }
     throw err
   }
+}
+
+/** Unconditional put — always overwrites. Used for mutable E2E test fixtures. */
+async function reset(tableName: string, item: Record<string, unknown>): Promise<void> {
+  await putItem(tableName, item)
 }
 
 export async function seedData(): Promise<void> {
@@ -294,62 +306,133 @@ export async function seedData(): Promise<void> {
     'attribute_not_exists(PK)'
   )
 
-  // 12. Event item — EVENT# / PROFILE
-  await upsert(
-    tableName,
-    {
-      PK: `EVENT#${EVENT_ID}`,
-      SK: 'PROFILE',
-      eventId: EVENT_ID,
-      orgId: ORG_ID,
-      title: 'Demo Fun Run 2026',
-      eventTypeId: 'running',
-      eventDate: '2026-06-15',
-      startTime: '09:00',
-      endTime: '12:00',
-      venueName: 'Brockwell Park',
-      venueAddress: 'Brockwell Park, Herne Hill',
-      city: 'London',
-      postcode: 'SE24 9BJ',
-      status: 'PUBLISHED',
-      createdAt: '2026-01-01T00:00:00.000Z',
-      GSI3PK: 'EVENT_STATUS#PUBLISHED',
-      GSI3SK: `2026-06-15#${EVENT_ID}`,
-      GSI4PK: `ORG#${ORG_ID}`,
-      GSI4SK: `2026-06-15#${EVENT_ID}`,
-    },
-    'attribute_not_exists(PK)'
-  )
+  // 12. Event item — unconditional reset (mutated by TST-05 and TST-08)
+  await reset(tableName, {
+    PK: `EVENT#${EVENT_ID}`,
+    SK: 'PROFILE',
+    eventId: EVENT_ID,
+    orgId: ORG_ID,
+    title: 'Demo Fun Run 2026',
+    eventTypeId: 'running',
+    eventDate: '2026-06-15',
+    startTime: '09:00',
+    endTime: '12:00',
+    venueName: 'Brockwell Park',
+    venueAddress: 'Brockwell Park, Herne Hill',
+    city: 'London',
+    postcode: 'SE24 9BJ',
+    status: 'PUBLISHED',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    GSI3PK: 'EVENT_STATUS#PUBLISHED',
+    GSI3SK: `2026-06-15#${EVENT_ID}`,
+    GSI4PK: `ORG#${ORG_ID}`,
+    GSI4SK: `2026-06-15#${EVENT_ID}`,
+  })
 
-  // 13. Role 1 — EVENT# / ROLE#
-  await upsert(
-    tableName,
-    {
-      PK: `EVENT#${EVENT_ID}`,
-      SK: `ROLE#${ROLE_ID_1}`,
-      roleId: ROLE_ID_1,
-      eventId: EVENT_ID,
-      name: 'Marshal',
-      capacity: 10,
-      filledCount: 0,
-    },
-    'attribute_not_exists(SK)'
-  )
+  // 13. Role 1 — unconditional reset
+  await reset(tableName, {
+    PK: `EVENT#${EVENT_ID}`,
+    SK: `ROLE#${ROLE_ID_1}`,
+    roleId: ROLE_ID_1,
+    eventId: EVENT_ID,
+    name: 'Marshal',
+    capacity: 10,
+    filledCount: 0,
+  })
 
-  // 14. Role 2 — EVENT# / ROLE#
-  await upsert(
-    tableName,
-    {
-      PK: `EVENT#${EVENT_ID}`,
-      SK: `ROLE#${ROLE_ID_2}`,
-      roleId: ROLE_ID_2,
-      eventId: EVENT_ID,
-      name: 'Water Station',
-      capacity: 5,
-      filledCount: 0,
-    },
-    'attribute_not_exists(SK)'
-  )
+  // 14. Role 2 — unconditional reset
+  await reset(tableName, {
+    PK: `EVENT#${EVENT_ID}`,
+    SK: `ROLE#${ROLE_ID_2}`,
+    roleId: ROLE_ID_2,
+    eventId: EVENT_ID,
+    name: 'Water Station',
+    capacity: 5,
+    filledCount: 0,
+  })
+
+  // 15. Published event for cancel E2E tests — unconditional reset (mutable fixture)
+  await reset(tableName, {
+    PK: `EVENT#${PUBLISHED_EVENT_ID}`,
+    SK: 'PROFILE',
+    eventId: PUBLISHED_EVENT_ID,
+    orgId: ORG_ID,
+    title: 'Demo Published Event',
+    eventTypeId: 'running',
+    eventDate: '2026-09-01',
+    startTime: '10:00',
+    endTime: '14:00',
+    venueName: 'Victoria Park',
+    venueAddress: 'Victoria Park, Hackney',
+    city: 'London',
+    postcode: 'E9 5DS',
+    status: 'PUBLISHED',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    publishedAt: '2026-01-02T00:00:00.000Z',
+    GSI3PK: 'EVENT_STATUS#PUBLISHED',
+    GSI3SK: `2026-09-01#${PUBLISHED_EVENT_ID}`,
+    GSI4PK: `ORG#${ORG_ID}`,
+    GSI4SK: `2026-09-01#${PUBLISHED_EVENT_ID}`,
+  })
+
+  // 16. Role for published event — unconditional reset
+  await reset(tableName, {
+    PK: `EVENT#${PUBLISHED_EVENT_ID}`,
+    SK: `ROLE#${PUBLISHED_ROLE_ID}`,
+    roleId: PUBLISHED_ROLE_ID,
+    eventId: PUBLISHED_EVENT_ID,
+    name: 'Marshal',
+    capacity: 5,
+    filledCount: 1,
+  })
+
+  // 17. PENDING registration for the published event — unconditional reset
+  await reset(tableName, {
+    PK: `REG#${PENDING_REG_ID}`,
+    SK: 'META',
+    regId: PENDING_REG_ID,
+    eventId: PUBLISHED_EVENT_ID,
+    roleId: PUBLISHED_ROLE_ID,
+    volunteerId: USER_ID,
+    status: 'PENDING',
+    createdAt: '2026-01-03T00:00:00.000Z',
+    GSI4PK: `EVENT#${PUBLISHED_EVENT_ID}`,
+    GSI4SK: `REG#${PENDING_REG_ID}`,
+  })
+
+  // 18. Draft event for publish E2E tests — unconditional reset
+  await reset(tableName, {
+    PK: `EVENT#${DRAFT_EVENT_ID}`,
+    SK: 'PROFILE',
+    eventId: DRAFT_EVENT_ID,
+    orgId: ORG_ID,
+    title: 'Demo Draft Event',
+    eventTypeId: 'running',
+    eventDate: '2026-10-01',
+    startTime: '09:00',
+    endTime: '13:00',
+    venueName: 'Hyde Park',
+    venueAddress: 'Hyde Park, Westminster',
+    city: 'London',
+    postcode: 'W2 2UH',
+    status: 'DRAFT',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    GSI3PK: 'EVENT_STATUS#DRAFT',
+    GSI3SK: `2026-10-01#${DRAFT_EVENT_ID}`,
+    GSI4PK: `ORG#${ORG_ID}`,
+    GSI4SK: `2026-10-01#${DRAFT_EVENT_ID}`,
+  })
+
+  // 19. Role for draft event — unconditional reset
+  await reset(tableName, {
+    PK: `EVENT#${DRAFT_EVENT_ID}`,
+    SK: `ROLE#${DRAFT_ROLE_ID}`,
+    roleId: DRAFT_ROLE_ID,
+    eventId: DRAFT_EVENT_ID,
+    name: 'Marshal',
+    capacity: 8,
+    filledCount: 0,
+  })
 
   console.log('Seed data inserted successfully.')
 }

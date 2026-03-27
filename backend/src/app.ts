@@ -8,6 +8,7 @@ import { adminOrgsRouter } from './handlers/admin-organisations'
 import { requireAuth, requireRole, requireApprovedOrg } from './middleware/auth.middleware'
 import { resetLimiter } from './lib/rateLimiter'
 import { orgEventsRouter } from './handlers/org-events'
+import { adminEventsRouter } from './handlers/admin-events'
 
 export const app = express()
 
@@ -46,6 +47,9 @@ app.use('/organisations', organisationsRouter)
 
 // Admin organisation management (requires SUPER_ADMIN)
 app.use('/admin/organisations', requireAuth, requireRole('SUPER_ADMIN'), adminOrgsRouter)
+
+// Admin event management (requires SUPER_ADMIN)
+app.use('/admin/events', requireAuth, requireRole('SUPER_ADMIN'), adminEventsRouter)
 
 // Org Admin event management (requires approved ORG_ADMIN)
 app.use(

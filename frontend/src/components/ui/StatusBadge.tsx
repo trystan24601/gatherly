@@ -1,4 +1,4 @@
-type BadgeStatus = 'pending' | 'confirmed' | 'declined' | 'cancelled' | 'completed' | 'all-filled' | 'published' | 'draft'
+type BadgeStatus = 'pending' | 'confirmed' | 'declined' | 'cancelled' | 'completed' | 'all-filled' | 'published' | 'draft' | 'active'
 
 interface StatusBadgeProps {
   status: BadgeStatus
@@ -37,6 +37,10 @@ const BADGE_CONFIG: Record<BadgeStatus, { label: string; classes: string }> = {
   draft: {
     label: 'Draft',
     classes: 'bg-badge-draft-bg border-badge-draft-border text-badge-draft-text',
+  },
+  active: {
+    label: 'Active',
+    classes: 'bg-[rgba(99,102,241,0.1)] border-[rgba(99,102,241,0.2)] text-indigo-600',
   },
 }
 

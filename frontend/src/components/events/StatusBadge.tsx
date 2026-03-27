@@ -11,11 +11,12 @@
  *   COMPLETED → muted (slate) pill
  */
 
-type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED'
+type EventStatus = 'DRAFT' | 'PUBLISHED' | 'ACTIVE' | 'CANCELLED' | 'COMPLETED'
 
 const STATUS_CLASSES: Record<EventStatus, string> = {
   DRAFT: 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-700',
   PUBLISHED: 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-700',
+  ACTIVE: 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-700',
   CANCELLED: 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-700',
   COMPLETED: 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-neutral-100 text-neutral-600',
 }
