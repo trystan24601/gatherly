@@ -32,6 +32,8 @@ const ORG_ADMIN_EMAIL = 'admin@gatherlydemohq.com'
 const ORG_ADMIN_PASSWORD = 'TestPassword123!'
 const ORG_ID = 'org-demo-runners'
 const SEEDED_EVENT_ID = 'event-demo-fun-run'
+const SUPER_ADMIN_EMAIL = 'superadmin@gatherlywork.com'
+const SUPER_ADMIN_PASSWORD = 'TestPassword123!'
 
 // --------------------------------------------------------------------------
 // Helpers
@@ -281,41 +283,58 @@ test.describe('TST-04: Cannot edit PUBLISHED event', () => {
 
 test.describe('TST-05: Ownership enforcement', () => {
   test('org admin cannot access event owned by different org via API', async ({ page }) => {
-    await loginAsOrgAdmin(page)
-
-    // Create a second org admin by registering a new org
+    const ts = Date.now()
+    const secondAdminEmail = `second-admin-${ts}@test.example.com`
+    const secondAdminPassword = 'SecurePass1!'
     const ctx = await apiRequest.newContext({ baseURL: apiURL })
 
-    // Register a second org
+    // 1. Register a second org (PENDING)
     const regRes = await ctx.post('/organisations/register', {
       data: {
-        name: `E2E Second Org ${Date.now()}`,
+        name: `E2E Second Org ${ts}`,
         orgType: 'COMMUNITY',
-        description: 'A second org for testing event ownership. Must be long enough.',
-        contactEmail: `second-org-${Date.now()}@test.example.com`,
+        description: 'A second org for testing event ownership enforcement.',
+        contactEmail: `second-org-${ts}@test.example.com`,
         contactPhone: '07700900123',
         adminFirstName: 'Second',
         adminLastName: 'Admin',
-        adminEmail: `second-admin-${Date.now()}@test.example.com`,
-        adminPassword: 'SecurePass1!',
+        adminEmail: secondAdminEmail,
+        adminPassword: secondAdminPassword,
       },
     })
-    expect([200, 201]).toContain(regRes.status())
-    await ctx.dispose()
+    expect(regRes.status()).toBe(201)
+    const { orgId: secondOrgId } = await regRes.json() as { orgId: string }
 
-    // Use the seeded ORG_ADMIN event — try PATCH from a non-owning session
-    const cookies = await page.context().cookies()
-    const sid = cookies.find((c) => c.name === 'sid')?.value
-    const ctx2 = await apiRequest.newContext({ baseURL: apiURL })
+    // 2. Approve the second org as super admin
+    const adminLoginRes = await ctx.post('/auth/admin/login', {
+      data: { email: SUPER_ADMIN_EMAIL, password: SUPER_ADMIN_PASSWORD },
+    })
+    expect(adminLoginRes.status()).toBe(200)
+    const adminCookies = adminLoginRes.headers()['set-cookie'] ?? ''
 
-    // Create an event under org-demo-runners
-    const futureDate = futureDateStr()
-    const createRes = await ctx2.post('/organisation/events', {
-      headers: { Cookie: `sid=${sid}` },
+    const approveRes = await ctx.post(`/admin/organisations/${secondOrgId}/approve`, {
+      headers: { Cookie: adminCookies },
+    })
+    expect(approveRes.status()).toBe(200)
+
+    // 3. Log in as the second org admin
+    const secondLoginRes = await ctx.post('/auth/org/login', {
+      data: { email: secondAdminEmail, password: secondAdminPassword },
+    })
+    expect(secondLoginRes.status()).toBe(200)
+    const secondCookies = secondLoginRes.headers()['set-cookie'] ?? ''
+
+    // 4. Create an event under org-demo-runners using the first org admin
+    await loginAsOrgAdmin(page)
+    const firstCookies = await page.context().cookies()
+    const firstSid = firstCookies.find((c) => c.name === 'sid')?.value
+
+    const createRes = await ctx.post('/organisation/events', {
+      headers: { Cookie: `sid=${firstSid}` },
       data: {
         title: 'Ownership Test Event',
         eventTypeId: 'running',
-        eventDate: futureDate,
+        eventDate: futureDateStr(),
         startTime: '09:00',
         endTime: '17:00',
         venueName: 'Venue',
@@ -325,19 +344,22 @@ test.describe('TST-05: Ownership enforcement', () => {
       },
     })
     expect(createRes.status()).toBe(201)
-    const createdBody = await createRes.json() as { eventId: string }
-    const createdEventId = createdBody.eventId
+    const { eventId: createdEventId } = await createRes.json() as { eventId: string }
 
-    // Now try to PATCH that event using the second org's admin session
-    // Log in as second admin via page (not possible without a fresh login)
-    // Instead, verify via GET that a different org can't access it
-    // (using non-existent session to get 401)
-    const getRes = await ctx2.get(`/organisation/events/${createdEventId}`, {
-      headers: { Cookie: `sid=fake-session-id` },
+    // 5. Second org admin tries to GET the first org's event — must return 404
+    const getRes = await ctx.get(`/organisation/events/${createdEventId}`, {
+      headers: { Cookie: secondCookies },
     })
-    expect(getRes.status()).toBe(401)
+    expect(getRes.status()).toBe(404)
 
-    await ctx2.dispose()
+    // 6. Second org admin tries to PATCH the first org's event — must return 404
+    const patchRes = await ctx.patch(`/organisation/events/${createdEventId}`, {
+      headers: { Cookie: secondCookies },
+      data: { title: 'Hijacked Title' },
+    })
+    expect(patchRes.status()).toBe(404)
+
+    await ctx.dispose()
   })
 })
 
