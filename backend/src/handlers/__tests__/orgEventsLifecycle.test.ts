@@ -173,21 +173,6 @@ function mockSession(session: typeof ORG_ADMIN_SESSION | typeof VOLUNTEER_SESSIO
   vi.mocked(isSessionExpired).mockReturnValue(false)
 }
 
-function mockGetItemByPK(map: Record<string, Record<string, unknown> | undefined>) {
-  vi.mocked(getItem).mockImplementation(
-    async (_tableName: string, key: Record<string, unknown>) => {
-      const pk = String(key.PK ?? '')
-      return map[pk] ?? undefined
-    }
-  )
-}
-
-/** After publish/cancel UpdateItem, the handler re-fetches the item.
- *  We need getItem to return the original THEN the updated version. */
-function mockGetItemSequence(...items: Array<Record<string, unknown> | undefined>) {
-  let call = 0
-  vi.mocked(getItem).mockImplementation(async () => items[Math.min(call++, items.length - 1)])
-}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -398,7 +383,7 @@ describe('POST /organisation/events/:eventId/cancel', () => {
       expect(res.body.status).toBe('CANCELLED')
     })
 
-    it('calls transactWrite to bulk-cancel PENDING registrations', async () => {
+    it('calls transactWrite with event update + registrations in first batch', async () => {
       mockSession(ORG_ADMIN_SESSION)
       const cancelledEvent = { ...PUBLISHED_EVENT, status: 'CANCELLED', cancelledAt: '2026-05-01T00:00:00.000Z' }
       vi.mocked(getItem)
@@ -411,10 +396,12 @@ describe('POST /organisation/events/:eventId/cancel', () => {
         .post(`/organisation/events/${EVENT_ID}/cancel`)
         .set('Cookie', 'sid=sess-org-admin')
 
+      // First batch = event update (leadItem) + 1 registration = 2 items total
       expect(transactWrite).toHaveBeenCalledTimes(1)
       const [items] = vi.mocked(transactWrite).mock.calls[0]
-      expect(items).toHaveLength(1)
-      expect(items[0].Update?.Key).toEqual({ PK: 'REG#reg-1', SK: 'META' })
+      expect(items).toHaveLength(2)
+      expect(items[0].Update?.Key).toEqual({ PK: `EVENT#${EVENT_ID}`, SK: 'PROFILE' })
+      expect(items[1].Update?.Key).toEqual({ PK: 'REG#reg-1', SK: 'META' })
     })
 
     it('calls enqueueEventCancelled with EVENT_CANCELLED type and affected registrations', async () => {
@@ -437,7 +424,7 @@ describe('POST /organisation/events/:eventId/cancel', () => {
       expect(payload.affectedRegistrations[0].regId).toBe('reg-1')
     })
 
-    it('does not call transactWrite when there are no PENDING registrations', async () => {
+    it('calls transactWrite once (event update only) when there are no PENDING registrations', async () => {
       mockSession(ORG_ADMIN_SESSION)
       const cancelledEvent = { ...PUBLISHED_EVENT, status: 'CANCELLED', cancelledAt: '2026-05-01T00:00:00.000Z' }
       vi.mocked(getItem)
@@ -450,7 +437,13 @@ describe('POST /organisation/events/:eventId/cancel', () => {
         .post(`/organisation/events/${EVENT_ID}/cancel`)
         .set('Cookie', 'sid=sess-org-admin')
 
-      expect(transactWrite).not.toHaveBeenCalled()
+      // transactWrite is called once with just the event status update (atomic even with 0 registrations)
+      expect(transactWrite).toHaveBeenCalledTimes(1)
+      expect(transactWrite).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ Update: expect.objectContaining({ Key: { PK: `EVENT#${EVENT_ID}`, SK: 'PROFILE' } }) }),
+        ])
+      )
       expect(enqueueEventCancelled).toHaveBeenCalledWith(
         expect.objectContaining({ affectedRegistrations: [] })
       )

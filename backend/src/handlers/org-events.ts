@@ -451,19 +451,8 @@ orgEventsRouter.post('/:eventId/cancel', async (req: Request, res: Response): Pr
 
   const cancelledAt = new Date().toISOString()
 
-  await updateItem(
-    TABLE(),
-    { PK: `EVENT#${eventId}`, SK: 'PROFILE' },
-    'SET #status = :cancelled, GSI3PK = :gsi3pk, cancelledAt = :cancelledAt',
-    {
-      ':cancelled': 'CANCELLED',
-      ':gsi3pk': 'EVENT_STATUS#CANCELLED',
-      ':cancelledAt': cancelledAt,
-    },
-    { '#status': 'status' }
-  )
-
-  // Query GSI4 for all PENDING registrations on this event
+  // Query GSI4 for all PENDING registrations BEFORE updating event status so
+  // that the event status change and the first registration batch are atomic.
   const pendingRegistrations = await queryItems(
     TABLE(),
     'GSI4PK = :gsi4pk',
@@ -475,8 +464,24 @@ orgEventsRouter.post('/:eventId/cancel', async (req: Request, res: Response): Pr
     }
   )
 
-  // Bulk-cancel PENDING registrations in batches of 25
-  await cancelEventRegistrations(pendingRegistrations, TABLE())
+  // Build the event update as a TransactWrite item so it is included atomically
+  // in the first batch with the registration cancellations.
+  const eventUpdateItem = {
+    Update: {
+      TableName: TABLE(),
+      Key: { PK: `EVENT#${eventId}`, SK: 'PROFILE' },
+      UpdateExpression: 'SET #status = :cancelled, GSI3PK = :gsi3pk, cancelledAt = :cancelledAt',
+      ExpressionAttributeNames: { '#status': 'status' },
+      ExpressionAttributeValues: {
+        ':cancelled': 'CANCELLED',
+        ':gsi3pk': 'EVENT_STATUS#CANCELLED',
+        ':cancelledAt': cancelledAt,
+      },
+    },
+  }
+
+  // Bulk-cancel registrations; event update is the leadItem in the first batch.
+  await cancelEventRegistrations(pendingRegistrations, TABLE(), eventUpdateItem)
 
   // Enqueue SQS notification (or log locally)
   await enqueueEventCancelled({

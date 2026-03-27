@@ -24,15 +24,7 @@ export const adminEventsRouter = Router()
 // --------------------------------------------------------------------------
 
 function stripEventKeys(item: Record<string, unknown>): Record<string, unknown> {
-  const {
-    PK: _pk,
-    SK: _sk,
-    GSI3PK: _g3pk,
-    GSI3SK: _g3sk,
-    GSI4PK: _g4pk,
-    GSI4SK: _g4sk,
-    ...safe
-  } = item // eslint-disable-line @typescript-eslint/no-unused-vars
+  const { PK: _pk, SK: _sk, GSI3PK: _g3pk, GSI3SK: _g3sk, GSI4PK: _g4pk, GSI4SK: _g4sk, ...safe } = item // eslint-disable-line @typescript-eslint/no-unused-vars
   return safe
 }
 

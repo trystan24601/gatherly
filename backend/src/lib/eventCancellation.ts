@@ -5,9 +5,14 @@
  * DynamoDB TransactWrite maximum) and issues a TransactWrite for each batch,
  * setting status=CANCELLED on every item.
  *
- * When the registrations array is empty, no DynamoDB call is made.
+ * An optional `leadItem` (e.g. the event status update) is prepended to the
+ * first batch, reserving one slot so that first batch never exceeds 25 items.
+ * This makes the event status change and the first registration batch atomic.
+ *
+ * When the registrations array is empty and a leadItem is provided, a single
+ * TransactWrite is issued for the leadItem alone.
  */
-import { transactWrite } from './dynamodb'
+import { transactWrite, type TransactWriteItem } from './dynamodb'
 
 const BATCH_SIZE = 25
 
@@ -16,18 +21,42 @@ const BATCH_SIZE = 25
  *
  * @param registrations - Array of registration items with at least `regId` (PK derived as REG#<regId>)
  * @param tableName     - DynamoDB table name
+ * @param leadItem      - Optional item prepended to the first TransactWrite batch (e.g. the event update)
  */
 export async function cancelEventRegistrations(
   registrations: Record<string, unknown>[],
-  tableName: string
+  tableName: string,
+  leadItem?: TransactWriteItem
 ): Promise<void> {
-  if (registrations.length === 0) return
-
   const cancelledAt = new Date().toISOString()
 
-  for (let i = 0; i < registrations.length; i += BATCH_SIZE) {
-    const batch = registrations.slice(i, i + BATCH_SIZE)
+  // First batch: leadItem + up to (BATCH_SIZE - 1) registrations so total ≤ 25
+  const firstBatchSize = leadItem ? BATCH_SIZE - 1 : BATCH_SIZE
+  const firstBatch = registrations.slice(0, firstBatchSize)
+  const remainingRegistrations = registrations.slice(firstBatchSize)
 
+  if (leadItem || firstBatch.length > 0) {
+    const items: TransactWriteItem[] = []
+    if (leadItem) items.push(leadItem)
+    items.push(
+      ...firstBatch.map((reg) => ({
+        Update: {
+          TableName: tableName,
+          Key: { PK: `REG#${reg.regId as string}`, SK: 'META' },
+          UpdateExpression: 'SET #status = :cancelled, cancelledAt = :cancelledAt',
+          ExpressionAttributeNames: { '#status': 'status' },
+          ExpressionAttributeValues: {
+            ':cancelled': 'CANCELLED',
+            ':cancelledAt': cancelledAt,
+          },
+        },
+      }))
+    )
+    await transactWrite(items)
+  }
+
+  for (let i = 0; i < remainingRegistrations.length; i += BATCH_SIZE) {
+    const batch = remainingRegistrations.slice(i, i + BATCH_SIZE)
     await transactWrite(
       batch.map((reg) => ({
         Update: {
