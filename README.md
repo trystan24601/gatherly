@@ -20,15 +20,11 @@ Volunteer management platform for events organisations. Built on AWS serverless 
 
 ### Getting started
 
-```bash
-cp .env.local.example .env.local
-docker compose up -d
-npm install
-npm run db:bootstrap --workspace=backend
-npm run db:seed --workspace=backend
-```
+Run the setup script to install dependencies, start Docker services, bootstrap DynamoDB, seed demo data, and launch both dev servers in one step:
 
-Services:
+```bash
+./dev-start.sh
+```
 
 | URL | Service |
 |---|---|
@@ -36,6 +32,25 @@ Services:
 | http://localhost:3001/health | API health check |
 | http://localhost:8001 | DynamoDB Admin UI |
 | http://localhost:8025 | Mailhog (email capture) |
+
+The script is idempotent — safe to re-run. It skips creating `.env.local` if one already exists and re-bootstrapping DynamoDB is a no-op if the table already exists.
+
+### Demo screens (no backend needed)
+
+To browse the interactive UI mockups without any backend or database:
+
+```bash
+npm install
+npm run dev --workspace=frontend
+```
+
+| URL | Screen |
+|---|---|
+| http://localhost:5173/demo | Landing page |
+| http://localhost:5173/demo/events | Event discovery feed |
+| http://localhost:5173/demo/events/farnham-10k-2026 | Event detail + role application flow |
+| http://localhost:5173/demo/organiser/events/farnham-10k-2026 | Organiser event dashboard |
+| http://localhost:5173/demo/organiser/events/farnham-10k-2026/registrations | Organiser registration review |
 
 ### Seeded Accounts
 
